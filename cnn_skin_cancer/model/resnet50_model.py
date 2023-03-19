@@ -1,6 +1,9 @@
 # ----- ----- ----- ----- ----- -----
 ## RESNET 50
 
+def train_resnet50_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs):
+    pass
+
 input_shape = (224, 224, 3)
 lr = 1e-5
 epochs = 50

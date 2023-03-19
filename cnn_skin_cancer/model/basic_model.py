@@ -13,13 +13,12 @@ import mlflow
 import mlflow.keras
 import numpy as np
 
-def run_model(mlflow_tracking_uri:str,mlflow_run_id:str, **kwargs):
+def train_basic_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs):
 
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
     ti = kwargs['ti']
 
-    # get value_1
     path_X_train = ti.xcom_pull(key="path_X_train", task_ids='run_preprocessing')
     path_y_train = ti.xcom_pull(key="path_y_train", task_ids='run_preprocessing')
     path_X_test = ti.xcom_pull(key="path_X_test", task_ids='run_preprocessing')
@@ -39,7 +38,7 @@ def run_model(mlflow_tracking_uri:str,mlflow_run_id:str, **kwargs):
         "loss": "binary_crossentropy",
         "metrics": ["accuracy"],
         "validation_split": 0.2,
-        "epochs": 10,
+        "epochs": 2,
         "batch_size": 64,
     }
 
@@ -75,13 +74,14 @@ def run_model(mlflow_tracking_uri:str,mlflow_run_id:str, **kwargs):
     model.summary()
 
     # Set a learning rate annealer
-    learning_rate_reduction = ReduceLROnPlateau(monitor="val_accuracy", patience=5, verbose=1, factor=0.5, min_lr=1e-7)
+    learning_rate_reduction = ReduceLROnPlateau(monitor="accuracy", patience=5, verbose=1, factor=0.5, min_lr=1e-7)
 
     # learning_rate
     lr = 1e-5
 
-    with mlflow.start_run(run_id=mlflow_run_id) as run:
-
+    run_name = "basic-keras-cnn"
+    with mlflow.start_run(experiment_id=mlflow_experiment_id,run_name=run_name) as run:
+    
         mlflow.log_params(params)
         # mlflow.set_tag("env", "dev")
 
@@ -99,6 +99,7 @@ def run_model(mlflow_tracking_uri:str,mlflow_run_id:str, **kwargs):
         mlflow.keras.autolog(disable=True)
         mlflow.keras.log_model(model, artifact_path="keras-model")
 
+        # TODO: UserWarning: Starting a Matplotlib GUI outside of the main thread will likely fail.
         # list all data in history
         print(history.history.keys())
         # summarize history for accuracy

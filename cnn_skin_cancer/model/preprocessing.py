@@ -5,13 +5,11 @@ from keras.utils.np_utils import to_categorical  # used for converting labels to
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import os
 from glob import glob
 import seaborn as sns
 from PIL import Image
 import pathlib
 
-np.random.seed(11)  # It's my lucky number
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, KFold, cross_val_score, GridSearchCV
 from sklearn.metrics import accuracy_score
@@ -20,14 +18,17 @@ from sklearn.utils import shuffle
 import mlflow
 
 
-def run_preprocessing(mlflow_tracking_uri:str,mlflow_run_id:str,**kwargs) -> None:
-    
-    parent_path = pathlib.Path(__file__).parent.absolute()
+def run_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, **kwargs) -> None:
+
+    dir_path = pathlib.Path(__file__).parent.absolute()
+    print(dir_path)
+    parent_path = dir_path.parent
     print(parent_path)
 
     mlflow.set_tracking_uri(mlflow_tracking_uri)
-
-    with mlflow.start_run(run_id=mlflow_run_id) as run:
+    # TODO timestamp in name
+    run_name = "preprocessing"
+    with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=run_name) as run:
 
         DATAPATH = f"{parent_path}/data/"
 
@@ -49,23 +50,24 @@ def run_preprocessing(mlflow_tracking_uri:str,mlflow_run_id:str,**kwargs) -> Non
         def _merge_data(set_one: np.array, set_two: np.array):
             return np.concatenate((set_one, set_two), axis=0)
 
-        def _display_image(X_train, y_train):
-            # Display first 15 images of moles, and how they are classified
-            # This image can be logged and stored in mlflow
-            w = 40
-            h = 30
-            fig = plt.figure(figsize=(12, 8))
-            columns = 5
-            rows = 3
+        # TODO: How to do images in airflow?
+        # def _display_image(X_train, y_train):
+        #     # Display first 15 images of moles, and how they are classified
+        #     # This image can be logged and stored in mlflow
+        #     w = 40
+        #     h = 30
+        #     fig = plt.figure(figsize=(12, 8))
+        #     columns = 5
+        #     rows = 3
 
-            for i in range(1, columns * rows + 1):
-                ax = fig.add_subplot(rows, columns, i)
-                if (y_train[i] == 0).any():
-                    ax.title.set_text("Benign")
-                else:
-                    ax.title.set_text("Malignant")
-                plt.imshow(X_train[i], interpolation="nearest")
-            mlflow.log_figure(fig, "exemplary_images.png")
+        #     for i in range(1, columns * rows + 1):
+        #         ax = fig.add_subplot(rows, columns, i)
+        #         if (y_train[i] == 0).any():
+        #             ax.title.set_text("Benign")
+        #         else:
+        #             ax.title.set_text("Malignant")
+        #         plt.imshow(X_train[i], interpolation="nearest")
+        #     mlflow.log_figure(fig, "exemplary_images.png")
 
         # Load in training pictures
         X_benign = _load_and_convert_images(folder_benign_train)
@@ -93,21 +95,18 @@ def run_preprocessing(mlflow_tracking_uri:str,mlflow_run_id:str,**kwargs) -> Non
         y_train = to_categorical(y_train, num_classes=2)
         y_test = to_categorical(y_test, num_classes=2)
 
-        _display_image(X_train, y_train)
+        # _display_image(X_train, y_train)
 
         # With data augmentation to prevent overfitting
         X_train = X_train / 255.0
         X_test = X_test / 255.0
 
-        np.save(f'{parent_path}/X_train.npy', X_train)
-        np.save(f'{parent_path}/y_train.npy', y_train)
-        np.save(f'{parent_path}/X_test.npy', X_test)
-        np.save(f'{parent_path}/y_test.npy', y_test)
-        #d = np.load('test3.npy')
+        np.save(f"{parent_path}/X_train.npy", X_train)
+        np.save(f"{parent_path}/y_train.npy", y_train)
+        np.save(f"{parent_path}/X_test.npy", X_test)
+        np.save(f"{parent_path}/y_test.npy", y_test)
 
-        kwargs['ti'].xcom_push(key='path_X_train', value=f'{parent_path}/X_train.npy')
-        kwargs['ti'].xcom_push(key='path_y_train', value=f'{parent_path}/y_train.npy')
-        kwargs['ti'].xcom_push(key='path_X_test', value=f'{parent_path}/X_test.npy')
-        kwargs['ti'].xcom_push(key='path_y_test', value=f'{parent_path}/y_test.npy')
-
-    #return X_train, y_train, X_test, y_test
+        kwargs["ti"].xcom_push(key="path_X_train", value=f"{parent_path}/X_train.npy")
+        kwargs["ti"].xcom_push(key="path_y_train", value=f"{parent_path}/y_train.npy")
+        kwargs["ti"].xcom_push(key="path_X_test", value=f"{parent_path}/X_test.npy")
+        kwargs["ti"].xcom_push(key="path_y_test", value=f"{parent_path}/y_test.npy")
