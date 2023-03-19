@@ -13,14 +13,22 @@ import mlflow
 import mlflow.keras
 import numpy as np
 
-def run_model(mlflow_run_id, X_train, y_train, X_test, y_test, **kwargs):
+def run_model(mlflow_tracking_uri:str,mlflow_run_id:str, **kwargs):
+
+    mlflow.set_tracking_uri(mlflow_tracking_uri)
 
     ti = kwargs['ti']
 
     # get value_1
     path_X_train = ti.xcom_pull(key="path_X_train", task_ids='run_preprocessing')
+    path_y_train = ti.xcom_pull(key="path_y_train", task_ids='run_preprocessing')
+    path_X_test = ti.xcom_pull(key="path_X_test", task_ids='run_preprocessing')
+    path_y_test = ti.xcom_pull(key="path_y_test", task_ids='run_preprocessing')
 
     X_train = np.load(f'{path_X_train}')
+    y_train = np.load(f'{path_y_train}')
+    X_test = np.load(f'{path_X_test}')
+    y_test = np.load(f'{path_y_test}')
 
     params = {
         "num_classes": 2,

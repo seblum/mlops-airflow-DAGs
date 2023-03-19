@@ -7,11 +7,11 @@ import mlflow
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
+mlflow_tracking_uri = "http://127.0.0.1:5006/"
+experiment_name = "cnn_skin_cancer"
+run_name = "keras-example-run"
 
-mlflow.set_tracking_uri("http://127.0.0.1:5006/")
-
-experiment_name = "tracking-experiment"
-run_name = "tracking-example-run"
+mlflow.set_tracking_uri(mlflow_tracking_uri)
 
 try:
     # Creating an experiment
@@ -24,7 +24,7 @@ mlflow.set_experiment(experiment_name)
 with mlflow.start_run(run_name=run_name) as run:
     mlflow_run_id = run.info.run_id
 
-
+# Create Airflow DAG
 default_args = {
     "owner": "seblum",
     "depends_on_past": False,
@@ -39,26 +39,17 @@ run_preprocessing_op = PythonOperator(
     task_id="run_preprocessing",
     provide_context=True,
     python_callable=run_preprocessing,
-    op_kwargs={"mlflow_run_id": mlflow_run_id},
+    op_kwargs={"mlflow_tracking_uri":mlflow_tracking_uri,"mlflow_run_id": mlflow_run_id},
     dag=dag,
 )
 
-# run_model_kwargs = {
-#     "mlflow_run_id": mlflow_run_id,
-#     "X_train": X_train,
-#     "y_train": y_train,
-#     "X_test": X_test,
-#     "y_test": y_test,
-# }
 run_model_op = PythonOperator(
-    task_id="run_model", provide_context=True, python_callable=run_model, dag=dag
+    task_id="run_model", provide_context=True, op_kwargs={"mlflow_tracking_uri":mlflow_tracking_uri,"mlflow_run_id": mlflow_run_id}, python_callable=run_model, dag=dag
 )
-
 
 # set task dependencies
 run_preprocessing_op >> run_model_op
 
 
 # X_train, y_train, X_test, y_test = run_preprocessing(mlflow_run_id)
-
 # run_model(mlflow_run_id, X_train, y_train, X_test, y_test)

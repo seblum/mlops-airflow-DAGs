@@ -9,6 +9,7 @@ import os
 from glob import glob
 import seaborn as sns
 from PIL import Image
+import pathlib
 
 np.random.seed(11)  # It's my lucky number
 from sklearn.preprocessing import StandardScaler
@@ -19,17 +20,16 @@ from sklearn.utils import shuffle
 import mlflow
 
 
-def run_preprocessing(mlflow_run_id,**kwargs):
-    import pathlib
-    path = pathlib.Path(__file__).parent.resolve()
-    print(path)
-    parent = path.parent.absolute()
-    print(parent)
+def run_preprocessing(mlflow_tracking_uri:str,mlflow_run_id:str,**kwargs) -> None:
+    
+    parent_path = pathlib.Path(__file__).parent.absolute()
+    print(parent_path)
 
+    mlflow.set_tracking_uri(mlflow_tracking_uri)
 
     with mlflow.start_run(run_id=mlflow_run_id) as run:
 
-        DATAPATH = f"{parent}/data/"
+        DATAPATH = f"{parent_path}/data/"
 
         folder_benign_train = f"{DATAPATH}train/benign"
         folder_malignant_train = f"{DATAPATH}train/malignant"
@@ -99,15 +99,15 @@ def run_preprocessing(mlflow_run_id,**kwargs):
         X_train = X_train / 255.0
         X_test = X_test / 255.0
 
-        import pathlib
-        path = pathlib.Path(__file__).parent.resolve()
-
-        np.save(f'{path}/X_train.npy', X_train)
-        np.save(f'{path}/y_train.npy', y_train)
-        np.save(f'{path}/X_test.npy', X_test)
-        np.save(f'{path}/y_test.npy', y_test)
+        np.save(f'{parent_path}/X_train.npy', X_train)
+        np.save(f'{parent_path}/y_train.npy', y_train)
+        np.save(f'{parent_path}/X_test.npy', X_test)
+        np.save(f'{parent_path}/y_test.npy', y_test)
         #d = np.load('test3.npy')
 
-        kwargs['ti'].xcom_push(key='path_X_train', value=f'{path}/X_train.npy')
+        kwargs['ti'].xcom_push(key='path_X_train', value=f'{parent_path}/X_train.npy')
+        kwargs['ti'].xcom_push(key='path_y_train', value=f'{parent_path}/y_train.npy')
+        kwargs['ti'].xcom_push(key='path_X_test', value=f'{parent_path}/X_test.npy')
+        kwargs['ti'].xcom_push(key='path_y_test', value=f'{parent_path}/y_test.npy')
 
-    return X_train, y_train, X_test, y_test
+    #return X_train, y_train, X_test, y_test
