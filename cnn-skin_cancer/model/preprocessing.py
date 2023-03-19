@@ -18,10 +18,11 @@ from sklearn.utils import shuffle
 
 import mlflow
 
+
 def run_preprocessing(mlflow_run_id):
-    
+
     with mlflow.start_run(run_id=mlflow_run_id) as run:
-        
+
         DATAPATH = "cnn-skin_cancer/data/"
 
         folder_benign_train = f"{DATAPATH}train/benign"
@@ -42,23 +43,23 @@ def run_preprocessing(mlflow_run_id):
         def _merge_data(set_one: np.array, set_two: np.array):
             return np.concatenate((set_one, set_two), axis=0)
 
-        def _display_image(X_train,y_train):
+        def _display_image(X_train, y_train):
             # Display first 15 images of moles, and how they are classified
             # This image can be logged and stored in mlflow
-            w=40
-            h=30
-            fig=plt.figure(figsize=(12, 8))
+            w = 40
+            h = 30
+            fig = plt.figure(figsize=(12, 8))
             columns = 5
             rows = 3
 
-            for i in range(1, columns*rows +1):
+            for i in range(1, columns * rows + 1):
                 ax = fig.add_subplot(rows, columns, i)
                 if (y_train[i] == 0).any():
-                    ax.title.set_text('Benign')
+                    ax.title.set_text("Benign")
                 else:
-                    ax.title.set_text('Malignant')
-                plt.imshow(X_train[i], interpolation='nearest')
-            mlflow.log_figure(fig, 'exemplary_images.png')
+                    ax.title.set_text("Malignant")
+                plt.imshow(X_train[i], interpolation="nearest")
+            mlflow.log_figure(fig, "exemplary_images.png")
 
         # Load in training pictures
         X_benign = _load_and_convert_images(folder_benign_train)
@@ -86,7 +87,7 @@ def run_preprocessing(mlflow_run_id):
         y_train = to_categorical(y_train, num_classes=2)
         y_test = to_categorical(y_test, num_classes=2)
 
-        _display_image(X_train,y_train)
+        _display_image(X_train, y_train)
 
         # With data augmentation to prevent overfitting
         X_train = X_train / 255.0
