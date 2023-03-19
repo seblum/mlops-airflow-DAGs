@@ -6,6 +6,7 @@ from airflow.decorators import dag, task
 # The Python function name acts as the DAG identifier
 # (see also https://airflow.apache.org/docs/apache-airflow/stable/tutorial_taskflow_api.html)
 
+
 @dag(
     schedule=None,
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
@@ -35,6 +36,7 @@ def taskflow_api_fundamentals():
     order_data = extract()
     order_summary = transform(order_data)
     load(order_summary["total_order_value"])
+
 
 # Finally execute the DAG
 taskflow_api_fundamentals()

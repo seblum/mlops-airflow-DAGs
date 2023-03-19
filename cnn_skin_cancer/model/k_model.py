@@ -9,17 +9,21 @@ from keras import layers
 from keras.models import Sequential
 from keras.callbacks import ReduceLROnPlateau
 
-from preprocessing import run_preprocessing
-
-
 import mlflow
 import mlflow.keras
-
+import numpy as np
 
 def run_model(mlflow_run_id, X_train, y_train, X_test, y_test, **kwargs):
 
+    ti = kwargs['ti']
+
+    # get value_1
+    path_X_train = ti.xcom_pull(key="path_X_train", task_ids='run_preprocessing')
+
+    X_train = np.load(f'{path_X_train}')
+
     params = {
-        "num_classes": 2,  # len(class_names)
+        "num_classes": 2,
         "input_shape": (224, 224, 3),
         "activation": "relu",
         "kernel_initializer": "glorot_uniform",

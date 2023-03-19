@@ -19,11 +19,17 @@ from sklearn.utils import shuffle
 import mlflow
 
 
-def run_preprocessing(mlflow_run_id):
+def run_preprocessing(mlflow_run_id,**kwargs):
+    import pathlib
+    path = pathlib.Path(__file__).parent.resolve()
+    print(path)
+    parent = path.parent.absolute()
+    print(parent)
+
 
     with mlflow.start_run(run_id=mlflow_run_id) as run:
 
-        DATAPATH = "cnn-skin_cancer/data/"
+        DATAPATH = f"{parent}/data/"
 
         folder_benign_train = f"{DATAPATH}train/benign"
         folder_malignant_train = f"{DATAPATH}train/malignant"
@@ -92,5 +98,16 @@ def run_preprocessing(mlflow_run_id):
         # With data augmentation to prevent overfitting
         X_train = X_train / 255.0
         X_test = X_test / 255.0
+
+        import pathlib
+        path = pathlib.Path(__file__).parent.resolve()
+
+        np.save(f'{path}/X_train.npy', X_train)
+        np.save(f'{path}/y_train.npy', y_train)
+        np.save(f'{path}/X_test.npy', X_test)
+        np.save(f'{path}/y_test.npy', y_test)
+        #d = np.load('test3.npy')
+
+        kwargs['ti'].xcom_push(key='path_X_train', value=f'{path}/X_train.npy')
 
     return X_train, y_train, X_test, y_test
