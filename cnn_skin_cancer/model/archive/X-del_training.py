@@ -15,7 +15,6 @@ import keras
 from keras.utils.np_utils import to_categorical  # used for converting labels to one-hot-encoding
 from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPool2D
-from keras import backend as K
 from keras.utils.np_utils import to_categorical  # convert to one-hot-encoding
 from keras.optimizers import Adam, RMSprop
 from keras.preprocessing.image import ImageDataGenerator

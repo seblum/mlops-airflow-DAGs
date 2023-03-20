@@ -76,9 +76,6 @@ def train_basic_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs
     # Set a learning rate annealer
     learning_rate_reduction = ReduceLROnPlateau(monitor="accuracy", patience=5, verbose=1, factor=0.5, min_lr=1e-7)
 
-    # learning_rate
-    lr = 1e-5
-
     run_name = "basic-keras-cnn"
     with mlflow.start_run(experiment_id=mlflow_experiment_id,run_name=run_name) as run:
     
@@ -97,30 +94,30 @@ def train_basic_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs
         )
 
         mlflow.keras.autolog(disable=True)
-        mlflow.keras.log_model(model, artifact_path="keras-model")
+        mlflow.keras.log_model(model, artifact_path=run_name)
 
         # TODO: UserWarning: Starting a Matplotlib GUI outside of the main thread will likely fail.
         # list all data in history
-        print(history.history.keys())
-        # summarize history for accuracy
-        fig = plt.figure(figsize=(3, 6))
-        plt.plot(history.history["accuracy"])
-        plt.plot(history.history["val_accuracy"])
-        plt.title("model accuracy")
-        plt.ylabel("accuracy")
-        plt.xlabel("epoch")
-        plt.legend(["train", "test"], loc="upper left")
-        mlflow.log_figure(fig, "accuracy.png")
+        # print(history.history.keys())
+        # # summarize history for accuracy
+        # fig = plt.figure(figsize=(3, 6))
+        # plt.plot(history.history["accuracy"])
+        # plt.plot(history.history["val_accuracy"])
+        # plt.title("model accuracy")
+        # plt.ylabel("accuracy")
+        # plt.xlabel("epoch")
+        # plt.legend(["train", "test"], loc="upper left")
+        # mlflow.log_figure(fig, "accuracy.png")
 
-        # summarize history for loss
-        fig = plt.figure(figsize=(3, 6))
-        plt.plot(history.history["loss"])
-        plt.plot(history.history["val_loss"])
-        plt.title("model loss")
-        plt.ylabel("loss")
-        plt.xlabel("epoch")
-        plt.legend(["train", "test"], loc="upper left")
-        mlflow.log_figure(fig, "loss.png")
+        # # summarize history for loss
+        # fig = plt.figure(figsize=(3, 6))
+        # plt.plot(history.history["loss"])
+        # plt.plot(history.history["val_loss"])
+        # plt.title("model loss")
+        # plt.ylabel("loss")
+        # plt.xlabel("epoch")
+        # plt.legend(["train", "test"], loc="upper left")
+        # mlflow.log_figure(fig, "loss.png")
 
         # Testing model on test data to evaluate
         y_pred = model.predict(X_test)
