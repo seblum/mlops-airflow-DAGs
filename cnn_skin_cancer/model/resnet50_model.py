@@ -4,11 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
 from keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.applications.resnet50 import ResNet50
 
 # ----- ----- ----- ----- ----- -----
 ## RESNET 50
 
 def train_resnet50_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs):
+    run_id = run.info.run_id
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
     ti = kwargs['ti']
@@ -31,7 +33,8 @@ def train_resnet50_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwa
         "num_classes": 2,
         "input_shape": (224, 224, 3),
         "activation": "relu",
-        "kernel_initializer": "glorot_uniform",
+        "kernel_initializer_glob": "glorot_uniform",
+        "kernel_initializer_norm": "normal",
         "optimizer": "adam",
         "loss": "binary_crossentropy",
         "metrics": ["accuracy"],
@@ -82,24 +85,35 @@ def train_resnet50_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwa
     with mlflow.start_run(experiment_id=mlflow_experiment_id,run_name=run_name) as run:
     
         mlflow.log_params(params)
-
+        mlflow.keras.autolog()
         # Train ResNet50 on all the data
         model.fit(X_train, y_train, epochs=params.get("epochs"), batch_size=params.get("epochs"), verbose=0, callbacks=[learning_rate_reduction])
+        mlflow.keras.autolog(disable=True)
+        model_uri = f"runs:/{run_id}/{run_name}"
 
-    # Testing model on test data to evaluate
-    y_pred = model.predict(X_test)
-    print(accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1)))
+        # Testing model on test data to evaluate
+        y_pred = model.predict(X_test)
+        prediction_accuracy = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1))
+        mlflow.log_metric("prediction_accuracy",prediction_accuracy)
+        print(prediction_accuracy)
 
-    mlflow.keras.log_model(model, artifact_path=run_name)
+        mlflow.keras.log_model(model, artifact_path=run_name)
 
-    # save model
-    # serialize model to JSON
-    resnet50_json = model.to_json()
+        mv = mlflow.register_model(model_uri, run_name)
+        print("Name: {}".format(mv.name))
+        print("Version: {}".format(mv.version))
+        print("Stage: {}".format(mv.current_stage))
 
-    with open("resnet50.json", "w") as json_file:
-        json_file.write(resnet50_json)
+    # # save model
+    # # serialize model to JSON
+    # resnet50_json = model.to_json()
 
-    # serialize weights to HDF5
-    model.save_weights("resnet50.h5")
-    print("Saved model to disk")
-    # 0.8287878787878787
+    # with open("resnet50.json", "w") as json_file:
+    #     json_file.write(resnet50_json)
+
+    # # serialize weights to HDF5
+    # model.save_weights("resnet50.h5")
+    # print("Saved model to disk")
+    # # 0.8287878787878787
+
+    kwargs["ti"].xcom_push(key=f"run_id-{run_name}", value=run_id)

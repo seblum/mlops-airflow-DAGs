@@ -33,7 +33,8 @@ def train_basic_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs
         "num_classes": 2,
         "input_shape": (224, 224, 3),
         "activation": "relu",
-        "kernel_initializer": "glorot_uniform",
+        "kernel_initializer_glob": "glorot_uniform",
+        "kernel_initializer_norm": "normal",
         "optimizer": "adam",
         "loss": "binary_crossentropy",
         "metrics": ["accuracy"],
@@ -51,7 +52,7 @@ def train_basic_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs
                 padding="Same",
                 input_shape=params.get("input_shape"),
                 activation=params.get("activation"),
-                kernel_initializer=params.get("kernel_initializer"),
+                kernel_initializer=params.get("kernel_initializer_glob"),
             ),
             layers.MaxPooling2D(pool_size=(2, 2)),
             layers.Dropout(0.25),
@@ -60,12 +61,12 @@ def train_basic_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs
                 kernel_size=(3, 3),
                 padding="Same",
                 activation=params.get("activation"),
-                kernel_initializer=params.get("kernel_initializer"),
+                kernel_initializer=params.get("kernel_initializer_glob"),
             ),
             layers.MaxPooling2D(pool_size=(2, 2)),
             layers.Dropout(0.25),
             layers.Flatten(),
-            layers.Dense(128, activation=params.get("activation"), kernel_initializer="normal"),
+            layers.Dense(128, activation=params.get("activation"), kernel_initializer=params.get("kernel_initializer_norm")),
             layers.Dense(params.get("num_classes"), activation="softmax"),
         ]
     )
@@ -78,7 +79,7 @@ def train_basic_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs
 
     run_name = "basic-keras-cnn"
     with mlflow.start_run(experiment_id=mlflow_experiment_id,run_name=run_name) as run:
-    
+        run_id = run.info.run_id
         mlflow.log_params(params)
         # mlflow.set_tag("env", "dev")
 
@@ -94,7 +95,7 @@ def train_basic_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs
         )
 
         mlflow.keras.autolog(disable=True)
-        mlflow.keras.log_model(model, artifact_path=run_name)
+        model_uri = f"runs:/{run_id}/{run_name}"
 
         # TODO: UserWarning: Starting a Matplotlib GUI outside of the main thread will likely fail.
         # list all data in history
@@ -119,10 +120,26 @@ def train_basic_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs
         # plt.legend(["train", "test"], loc="upper left")
         # mlflow.log_figure(fig, "loss.png")
 
+
         # Testing model on test data to evaluate
         y_pred = model.predict(X_test)
+        prediction_accuracy = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1))
+        mlflow.log_metric("prediction_accuracy",prediction_accuracy)
+        print(prediction_accuracy)
 
-        # keras_model = mlflow.keras.load_model("runs:/96771d893a5e46159d9f3b49bf9013e2" + "/models")
-        # predictions = keras_model.predict(x_test)
+        mlflow.keras.log_model(model, artifact_path=run_name)
 
-        print(accuracy_score(np.argmax(y_test, axis=1), y_pred))
+        mv = mlflow.register_model(model_uri, run_name)
+        print("Name: {}".format(mv.name))
+        print("Version: {}".format(mv.version))
+        print("Stage: {}".format(mv.current_stage))
+
+    kwargs["ti"].xcom_push(key=f"run_id-{run_name}", value=run_id)
+
+    # # Testing model on test data to evaluate
+    # y_pred = model.predict(X_test)
+
+    # # keras_model = mlflow.keras.load_model("runs:/96771d893a5e46159d9f3b49bf9013e2" + "/models")
+    # # predictions = keras_model.predict(x_test)
+
+    # print(accuracy_score(np.argmax(y_test, axis=1), y_pred))

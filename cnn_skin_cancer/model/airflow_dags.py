@@ -2,6 +2,7 @@ from cnn_skin_cancer.model.preprocessing import run_preprocessing
 from cnn_skin_cancer.model.basic_model import train_basic_model
 from cnn_skin_cancer.model.crossval_model import train_crossval_model
 from cnn_skin_cancer.model.resnet50_model import train_resnet50_model
+from cnn_skin_cancer.model.serve_model import serve_model
 
 import pendulum
 import mlflow
@@ -48,7 +49,7 @@ run_preprocessing_op = PythonOperator(
 )
 
 train_basic_model_op = PythonOperator(
-    task_id="run_model",
+    task_id="train_basic_model",
     provide_context=True,
     op_kwargs={"mlflow_tracking_uri": mlflow_tracking_uri, "mlflow_experiment_id": mlflow_experiment_id},
     python_callable=train_basic_model,
@@ -56,23 +57,34 @@ train_basic_model_op = PythonOperator(
 )
 
 train_crossval_model_op = PythonOperator(
-    task_id="run_model",
+    task_id="train_crossval_model",
     provide_context=True,
     op_kwargs={"mlflow_tracking_uri": mlflow_tracking_uri, "mlflow_experiment_id": mlflow_experiment_id},
     python_callable=train_crossval_model,
     dag=dag,
 )
 
-train_resnet_op = PythonOperator(
-    task_id="run_model",
+train_resnet50_op = PythonOperator(
+    task_id="train_resnet50_model",
     provide_context=True,
     op_kwargs={"mlflow_tracking_uri": mlflow_tracking_uri, "mlflow_experiment_id": mlflow_experiment_id},
     python_callable=train_resnet50_model,
     dag=dag,
 )
 
+serve_model_op = PythonOperator(
+    task_id="serve_model",
+    provide_context=True,
+    op_kwargs={"mlflow_tracking_uri": mlflow_tracking_uri, "mlflow_experiment_id": mlflow_experiment_id},
+    python_callable=serve_model,
+    dag=dag,
+)
 
 # set task dependencies
 run_preprocessing_op >> train_basic_model_op
 run_preprocessing_op >> train_crossval_model_op
-run_preprocessing_op >> train_resnet_op
+run_preprocessing_op >> train_resnet50_op
+
+train_basic_model_op >> serve_model_op
+train_crossval_model_op >> serve_model_op
+train_resnet50_op >> serve_model_op
