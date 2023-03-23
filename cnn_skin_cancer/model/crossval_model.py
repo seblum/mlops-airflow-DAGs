@@ -15,20 +15,21 @@ from sklearn.metrics import accuracy_score
 
 K.clear_session()
 
-def train_crossval_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs):
+
+def train_crossval_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, **kwargs):
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
-    ti = kwargs['ti']
+    ti = kwargs["ti"]
 
-    path_X_train = ti.xcom_pull(key="path_X_train", task_ids='run_preprocessing')
-    path_y_train = ti.xcom_pull(key="path_y_train", task_ids='run_preprocessing')
-    path_X_test = ti.xcom_pull(key="path_X_test", task_ids='run_preprocessing')
-    path_y_test = ti.xcom_pull(key="path_y_test", task_ids='run_preprocessing')
+    path_X_train = ti.xcom_pull(key="path_X_train", task_ids="run_preprocessing")
+    path_y_train = ti.xcom_pull(key="path_y_train", task_ids="run_preprocessing")
+    path_X_test = ti.xcom_pull(key="path_X_test", task_ids="run_preprocessing")
+    path_y_test = ti.xcom_pull(key="path_y_test", task_ids="run_preprocessing")
 
-    X_train = np.load(f'{path_X_train}')
-    y_train = np.load(f'{path_y_train}')
-    X_test = np.load(f'{path_X_test}')
-    y_test = np.load(f'{path_y_test}')
+    X_train = np.load(f"{path_X_train}")
+    y_train = np.load(f"{path_y_train}")
+    X_test = np.load(f"{path_X_test}")
+    y_test = np.load(f"{path_y_test}")
 
     params = {
         "num_classes": 2,
@@ -46,7 +47,7 @@ def train_crossval_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwa
     }
 
     run_name = "crossval-keras-cnn"
-    with mlflow.start_run(experiment_id=mlflow_experiment_id,run_name=run_name) as run:
+    with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=run_name) as run:
         run_id = run.info.run_id
 
         mlflow.log_params(params)
@@ -56,8 +57,8 @@ def train_crossval_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwa
 
         cvscores = []
         for train, test in kfold.split(X_train, y_train):
-        # create model
-    
+            # create model
+
             model = Sequential(
                 [
                     # layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
@@ -81,18 +82,28 @@ def train_crossval_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwa
                     layers.MaxPooling2D(pool_size=(2, 2)),
                     layers.Dropout(0.25),
                     layers.Flatten(),
-                    layers.Dense(128, activation=params.get("activation"), kernel_initializer=params.get("kernel_initializer_norm")),
+                    layers.Dense(
+                        128,
+                        activation=params.get("activation"),
+                        kernel_initializer=params.get("kernel_initializer_norm"),
+                    ),
                     layers.Dense(params.get("num_classes"), activation="softmax"),
                 ]
             )
 
             model.compile(optimizer=params.get("optimizer"), loss=params.get("loss"), metrics=params.get("metrics"))
             # Fit the model
-            model.fit(X_train[train], y_train[train], epochs=params.get("epochs"), batch_size=params.get("batch_size"), verbose=0)
+            model.fit(
+                X_train[train],
+                y_train[train],
+                epochs=params.get("epochs"),
+                batch_size=params.get("batch_size"),
+                verbose=0,
+            )
 
             # evaluate the model
             scores = model.evaluate(X_train[test], y_train[test], verbose=0)
-            print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
+            print("%s: %.2f%%" % (model.metrics_names[1], scores[1] * 100))
             cvscores.append(scores[1] * 100)
             K.clear_session()
 
@@ -105,7 +116,7 @@ def train_crossval_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwa
         # Testing model on test data to evaluate
         y_pred = model.predict(X_test)
         prediction_accuracy = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1))
-        mlflow.log_metric("prediction_accuracy",prediction_accuracy)
+        mlflow.log_metric("prediction_accuracy", prediction_accuracy)
         print(prediction_accuracy)
 
         mlflow.keras.log_model(model, artifact_path=run_name)

@@ -12,7 +12,7 @@ from airflow.operators.python import PythonOperator
 
 # SET MLFLOW
 
-mlflow_tracking_uri = "http://127.0.0.1:5007/"
+mlflow_tracking_uri = "http://127.0.0.1:5008/"
 experiment_name = "cnn_skin_cancer"
 
 mlflow.set_tracking_uri(mlflow_tracking_uri)
@@ -75,7 +75,7 @@ train_resnet50_op = PythonOperator(
 serve_model_op = PythonOperator(
     task_id="serve_model",
     provide_context=True,
-    op_kwargs={"mlflow_tracking_uri": mlflow_tracking_uri, "mlflow_experiment_id": mlflow_experiment_id},
+    op_kwargs={"mlflow_tracking_uri": mlflow_tracking_uri},
     python_callable=serve_model,
     dag=dag,
 )
