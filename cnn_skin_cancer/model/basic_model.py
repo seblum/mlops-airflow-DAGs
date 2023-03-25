@@ -13,22 +13,21 @@ import mlflow
 import mlflow.keras
 import numpy as np
 
-
-def train_basic_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, **kwargs):
+def train_basic_model(mlflow_tracking_uri:str,mlflow_experiment_id:str, **kwargs):
 
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
-    ti = kwargs["ti"]
+    ti = kwargs['ti']
 
-    path_X_train = ti.xcom_pull(key="path_X_train", task_ids="run_preprocessing")
-    path_y_train = ti.xcom_pull(key="path_y_train", task_ids="run_preprocessing")
-    path_X_test = ti.xcom_pull(key="path_X_test", task_ids="run_preprocessing")
-    path_y_test = ti.xcom_pull(key="path_y_test", task_ids="run_preprocessing")
+    path_X_train = ti.xcom_pull(key="path_X_train", task_ids='run_preprocessing')
+    path_y_train = ti.xcom_pull(key="path_y_train", task_ids='run_preprocessing')
+    path_X_test = ti.xcom_pull(key="path_X_test", task_ids='run_preprocessing')
+    path_y_test = ti.xcom_pull(key="path_y_test", task_ids='run_preprocessing')
 
-    X_train = np.load(f"{path_X_train}")
-    y_train = np.load(f"{path_y_train}")
-    X_test = np.load(f"{path_X_test}")
-    y_test = np.load(f"{path_y_test}")
+    X_train = np.load(f'{path_X_train}')
+    y_train = np.load(f'{path_y_train}')
+    X_test = np.load(f'{path_X_test}')
+    y_test = np.load(f'{path_y_test}')
 
     params = {
         "num_classes": 2,
@@ -67,9 +66,7 @@ def train_basic_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, **kwa
             layers.MaxPooling2D(pool_size=(2, 2)),
             layers.Dropout(0.25),
             layers.Flatten(),
-            layers.Dense(
-                128, activation=params.get("activation"), kernel_initializer=params.get("kernel_initializer_norm")
-            ),
+            layers.Dense(128, activation=params.get("activation"), kernel_initializer=params.get("kernel_initializer_norm")),
             layers.Dense(params.get("num_classes"), activation="softmax"),
         ]
     )
@@ -81,7 +78,7 @@ def train_basic_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, **kwa
     learning_rate_reduction = ReduceLROnPlateau(monitor="accuracy", patience=5, verbose=1, factor=0.5, min_lr=1e-7)
 
     run_name = "basic-keras-cnn"
-    with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=run_name) as run:
+    with mlflow.start_run(experiment_id=mlflow_experiment_id,run_name=run_name) as run:
         run_id = run.info.run_id
         mlflow.log_params(params)
         # mlflow.set_tag("env", "dev")
@@ -123,10 +120,11 @@ def train_basic_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, **kwa
         # plt.legend(["train", "test"], loc="upper left")
         # mlflow.log_figure(fig, "loss.png")
 
+
         # Testing model on test data to evaluate
         y_pred = model.predict(X_test)
         prediction_accuracy = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1))
-        mlflow.log_metric("prediction_accuracy", prediction_accuracy)
+        mlflow.log_metric("prediction_accuracy",prediction_accuracy)
         print(prediction_accuracy)
 
         mlflow.keras.log_model(model, artifact_path=run_name)
