@@ -1,11 +1,18 @@
-FROM python:3.9
+# syntax=docker/dockerfile:1
 
-WORKDIR /code
+FROM python:3.8-slim-buster
 
-COPY ./requirements.txt /code/requirements.txt
+ARG directory=./fastAPI-serving
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+# env in kubernetes einfügen
+ENV MLFLOW_EXPERIMENT_ID = "1234"
+ENV MLFLOW_RUN_ID = "4321"
 
-COPY ./app /code/app
+COPY $directory/requirements.txt /app/requirements.txt
+
+WORKDIR /app
+RUN pip3 install --upgrade -r requirements.txt
+COPY $directory/app /app
+
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]

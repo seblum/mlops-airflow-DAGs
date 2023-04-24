@@ -161,3 +161,6 @@ cython_debug/
 
 /mlruns
 /mlartifacts
+cnn_skin_cancer/.DS_Store
+.DS_Store
+.DS_Store

@@ -1,5 +1,6 @@
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+import os
 
 # https://fastapi.tiangolo.com/deployment/docker/#build-a-docker-image-for-fastapi
 
@@ -10,6 +11,10 @@ app = FastAPI()
 # Initiate H2O instance and MLflow client
 #h2o.init()
 client = MlflowClient()
+
+MLFLOW_EXPERIMENT_ID = os.getenv("MLFLOW_EXPERIMENT_ID")
+MLFLOW_RUN_ID = os.getenv("MLFLOW_RUN_ID")
+
 
 # Load best model (based on logloss) amongst all runs in all experiments
 # all_exps = [exp.experiment_id for exp in client.list_experiments()]

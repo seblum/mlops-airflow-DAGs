@@ -3,14 +3,16 @@ import requests
 import pandas as pd
 import io
 import json
+import os 
 
 st.title('MLOps Engineering Project: Skin Cancer Detection')
 
 # FastAPI endpoint
-endpoint = 'http://localhost:8000/predict' # FASTAPIENDPOINT
-# FASTAPI_URL = ""
-# FASTAPI_PORT = ""
-# endpoint = 'http://{FASTAPI_URL:FASTAPI_PORT}/predict'
+#endpoint = 'http://localhost:8000/predict' # FASTAPIENDPOINT
+FASTAPI_URL = os.getenv("FASTAPI_URL")
+FASTAPI_PORT = os.getenv("FASTAPI_PORT")
+endpoint = f'http://{FASTAPI_URL}:{FASTAPI_PORT}/predict'
+
 test_csv = st.file_uploader('', type=['csv','xlsx'], accept_multiple_files=False)
 
 if test_csv:
