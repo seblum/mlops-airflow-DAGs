@@ -1,21 +1,18 @@
-# syntax=docker/dockerfile:1
+FROM python:3.10.11-slim-buster
 
-FROM python:3.8-slim-buster
-
-ARG directory=./streamlit-inferece
+ARG directory=./streamlit-inference
 
 # env in kubernetes einfügen
-ENV FASTAPI_URL = "localhost"
-ENV FASTAPI_PORT = "8000"
+ENV FASTAPI_SERVING_IP = "localhost"
+ENV FASTAPI_SERVING_PORT = "8000"
 
-COPY $directory/requirements.txt /app/requirements.txt
+COPY /requirements.txt /app/requirements.txt
 
 WORKDIR /app
+RUN pip3 install --upgrade pip
 RUN pip3 install --upgrade -r requirements.txt
-COPY $directory/app /app
+COPY /app /app
 
 #EXPOSE 8501
 
-ENTRYPOINT ["streamlit", "run"]
-
-CMD ["streamlit.py"]
+ENTRYPOINT ["streamlit", "run", "main.py", "--server.port=8501", "--server.address=0.0.0.0"]

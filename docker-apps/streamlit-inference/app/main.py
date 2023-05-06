@@ -9,9 +9,9 @@ st.title('MLOps Engineering Project: Skin Cancer Detection')
 
 # FastAPI endpoint
 #endpoint = 'http://localhost:8000/predict' # FASTAPIENDPOINT
-FASTAPI_URL = os.getenv("FASTAPI_URL")
-FASTAPI_PORT = os.getenv("FASTAPI_PORT")
-endpoint = f'http://{FASTAPI_URL}:{FASTAPI_PORT}/predict'
+FASTAPI_SERVING_IP = os.getenv("FASTAPI_SERVING_IP")
+FASTAPI_SERVING_PORT = os.getenv("FASTAPI_SERVING_PORT")
+endpoint = f'http://{FASTAPI_SERVING_IP}:{FASTAPI_SERVING_PORT}/predict'
 
 test_csv = st.file_uploader('', type=['csv','xlsx'], accept_multiple_files=False)
 
@@ -28,7 +28,7 @@ if test_csv:
     if st.button('Start Prediction'):
         with st.spinner('Prediction in Progress. Please Wait...'):
             output = requests.post(endpoint, files=files, timeout=8000)
-        st.success('Success! Click the Download button below to retrieve prediction results (JSON format')
+        st.success('Success! Click the Download button below to retrieve prediction results (JSON format)')
         st.download_button(
             label='Download',
             data=json.dumps(output.json()), # Download as JSON file object

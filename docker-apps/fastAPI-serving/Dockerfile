@@ -5,14 +5,18 @@ FROM python:3.8-slim-buster
 ARG directory=./fastAPI-serving
 
 # env in kubernetes einfügen
+ENV MLFLOW_TRACKING_URI = "1234"
+ENV MLFLOW_MODEL_NAME = "1234"
+ENV MLFLOW_MODEL_VERSION = "1234"
 ENV MLFLOW_EXPERIMENT_ID = "1234"
 ENV MLFLOW_RUN_ID = "4321"
 
-COPY $directory/requirements.txt /app/requirements.txt
+COPY /requirements.txt /app/requirements.txt
 
 WORKDIR /app
+RUN pip3 install --upgrade pip
 RUN pip3 install --upgrade -r requirements.txt
-COPY $directory/app /app
+COPY /app /app
 
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
