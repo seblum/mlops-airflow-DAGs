@@ -4,3 +4,4 @@ uvicorn>=0.15.0,<0.16.0
 python-multipart
 mlflow
 pandas
+numpy

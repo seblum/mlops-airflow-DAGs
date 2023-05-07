@@ -8,8 +8,6 @@ ARG directory=./fastAPI-serving
 ENV MLFLOW_TRACKING_URI = "1234"
 ENV MLFLOW_MODEL_NAME = "1234"
 ENV MLFLOW_MODEL_VERSION = "1234"
-ENV MLFLOW_EXPERIMENT_ID = "1234"
-ENV MLFLOW_RUN_ID = "4321"
 
 COPY /requirements.txt /app/requirements.txt
 
