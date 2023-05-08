@@ -11,8 +11,10 @@ from io import BytesIO
 
 
 # https://fastapi.tiangolo.com/deployment/docker/#build-a-docker-image-for-fastapi
+from tensorflow import keras
 
 import mlflow
+import mlflow.keras
 
 # Get environment variables
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
@@ -76,38 +78,33 @@ async def service_health():
 
 def read_imagefile(data) -> Image.Image:
     image = Image.open(BytesIO(data))
-    np.array(image)
-    return image
+    np_image = np.array(image, dtype="uint8")
+    return np_image
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     print('[+] Read File')
     image = read_imagefile(await file.read())
-    print(image)
 
     print('[+] Initialize MLflow')
-    # Initiate MLflow client
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-    client = mlflow.tracking.MlflowClient()
 
     print('[+] Load Model')
-    model = mlflow.pyfunc.load_model(f"models:/{MLFLOW_MODEL_NAME}/{MLFLOW_MODEL_VERSION}")
-    print(model)
+    model = mlflow.keras.load_model(f"models:/{MLFLOW_MODEL_NAME}/{MLFLOW_MODEL_VERSION}")
     
-    print('[+] Initiate Prediction')
+    print('[+] Preprocess Data')
+    image = image / 255.0
+    data = image.reshape(1,224,224,3)
     #if file.filename.endswith(".json"):
     #return file["media"]
         # image = np.array(file, dtype="uint8")
-    data = image / 255
-        # os.remove(file.filename)
-        
-        # # Generate predictions with best model
+
+    print('[+] Initiate Prediction')
     preds = model.predict(data)
         
-    # Return a JSON object containing the model predictions
-    json_compatible_item_data = jsonable_encoder(preds)
-    return JSONResponse(content=json_compatible_item_data)
-    #else:
+    print('[+] Return Model Prediction')
+    return {"prediction": preds.tolist()}
+    # else:
         # Raise a HTTP 400 Exception, indicating Bad Request 
         # (you can learn more about HTTP response status codes here)
         #raise HTTPException(status_code=400, detail="Invalid file format. Only CSV Files accepted.")

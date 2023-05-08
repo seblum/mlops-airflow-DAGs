@@ -21,3 +21,4 @@ files = {'file': open(file_path, 'rb')}
 #print(files)
 output = requests.post(endpoint, files=files, timeout=8000)
 print(output)
+print(output.content)
