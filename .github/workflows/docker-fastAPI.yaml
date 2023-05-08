@@ -4,7 +4,6 @@ env:
   PREFIX: docker-apps
   DIRECTORY: fastapi-serving
   DOCKERREPO: seblum/model-serving
-  VERSION: v1
   
 on:
   push:
@@ -36,5 +35,4 @@ jobs:
         with:
           file: ./${{ env.PREFIX }}/${{ env.DIRECTORY }}/Dockerfile
           push: true
-          tags: ${{ env.DIRECTORY }}:${{ env.VERSION }}
-          #context: .
+          tags: ${{ env.DOCKERREPO }}:${{ env.DIRECTORY }}
