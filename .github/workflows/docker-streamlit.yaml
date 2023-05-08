@@ -3,7 +3,7 @@ name: Docker CI streamlit
 env:
   PREFIX: docker-apps
   DIRECTORY: streamlit-inference
-  DOCKERREPO: seblum/model-inference
+  DOCKERREPO: seblum/model-serving
   VERSION: v1
 
 on:
