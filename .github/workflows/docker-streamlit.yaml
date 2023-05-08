@@ -3,13 +3,12 @@ name: Docker CI streamlit
 env:
   PREFIX: docker-apps
   DIRECTORY: streamlit-inference
-  DOCKERREPO: seblum/model-inference
-  VERSION: v1
+  DOCKERREPO: seblum/model-serving
 
 on:
   push:
     branches: main
-    paths: ./${{ env.PREFIX }}/${{ env.DIRECTORY }}/**
+    paths: $PREFIX/$DIRECTORY/**
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -36,5 +35,4 @@ jobs:
         with:
           file: ./${{ env.PREFIX }}/${{ env.DIRECTORY }}/Dockerfile
           push: true
-          tags: ${{ env.DIRECTORY }}:${{ env.VERSION }}
-          #context: .
+          tags: ${{ env.DOCKERREPO }}:${{ env.DIRECTORY }}
