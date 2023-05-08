@@ -2,7 +2,7 @@ name: Docker CI fastAPI
 
 env:
   PREFIX: docker-apps
-  DIRECTORY: fastAPI-serving
+  DIRECTORY: fastapi-serving
   DOCKERREPO: seblum/model-inference
   VERSION: v1
   

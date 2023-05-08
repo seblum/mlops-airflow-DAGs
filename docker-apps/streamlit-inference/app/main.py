@@ -10,14 +10,8 @@ st.header('MLOps Engineering Project')
 st.subheader('Skin Cancer Detection')
 
 # FastAPI endpoint
-#endpoint = 'http://localhost:8000/predict' # FASTAPIENDPOINT
 FASTAPI_SERVING_IP = os.getenv("FASTAPI_SERVING_IP")
 FASTAPI_SERVING_PORT = os.getenv("FASTAPI_SERVING_PORT")
-endpoint = f'http://{FASTAPI_SERVING_IP}:{FASTAPI_SERVING_PORT}/predict'
-
-# testing
-FASTAPI_SERVING_IP = "localhost"
-FASTAPI_SERVING_PORT = "80"
 endpoint = f'http://{FASTAPI_SERVING_IP}:{FASTAPI_SERVING_PORT}/predict'
 
 
