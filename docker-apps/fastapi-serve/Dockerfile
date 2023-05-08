@@ -1,6 +1,6 @@
 FROM python:3.10.11-slim-buster
 
-ARG directory=./docker-apps/fastapi-serving
+ARG directory=./docker-apps/fastapi-serve
 
 ENV MLFLOW_TRACKING_URI=host.docker.internal:5008
 ENV MLFLOW_MODEL_NAME=basic-keras-cnn
