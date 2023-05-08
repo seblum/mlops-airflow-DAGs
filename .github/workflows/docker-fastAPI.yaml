@@ -4,7 +4,7 @@ env:
   PREFIX: docker-apps
   DIRECTORY: fastapi-serving
   DOCKERREPO: seblum/model-serving
-  
+
 on:
   push:
     branches: main

@@ -28,21 +28,18 @@ app = FastAPI()
 model_name = "Skin Cancer Detection"
 version = "v1.0.0"
 
-@app.get('/info')
+
+@app.get("/info")
 async def model_info():
     """Return model information, version, how to call"""
-    return {
-        "name": model_name,
-        "version": version
-    }
+    return {"name": model_name, "version": version}
 
 
-@app.get('/health')
+@app.get("/health")
 async def service_health():
     """Return service health"""
-    return {
-        "ok"
-    }
+    return {"ok"}
+
 
 # def read_imagefile(data) -> Image.Image:
 #     image = Image.open(BytesIO(data))
@@ -76,35 +73,37 @@ async def service_health():
 
 #     return {"message": f"Successfully uploaded {file.filename}"}
 
+
 def read_imagefile(data) -> Image.Image:
     image = Image.open(BytesIO(data))
     np_image = np.array(image, dtype="uint8")
     return np_image
 
+
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    print('[+] Read File')
+    print("[+] Read File")
     image = read_imagefile(await file.read())
 
-    print('[+] Initialize MLflow')
+    print("[+] Initialize MLflow")
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
-    print('[+] Load Model')
+    print("[+] Load Model")
     model = mlflow.keras.load_model(f"models:/{MLFLOW_MODEL_NAME}/{MLFLOW_MODEL_VERSION}")
-    
-    print('[+] Preprocess Data')
-    image = image / 255.0
-    data = image.reshape(1,224,224,3)
-    #if file.filename.endswith(".json"):
-    #return file["media"]
-        # image = np.array(file, dtype="uint8")
 
-    print('[+] Initiate Prediction')
+    print("[+] Preprocess Data")
+    image = image / 255.0
+    data = image.reshape(1, 224, 224, 3)
+    # if file.filename.endswith(".json"):
+    # return file["media"]
+    # image = np.array(file, dtype="uint8")
+
+    print("[+] Initiate Prediction")
     preds = model.predict(data)
-        
-    print('[+] Return Model Prediction')
+
+    print("[+] Return Model Prediction")
     return {"prediction": preds.tolist()}
     # else:
-        # Raise a HTTP 400 Exception, indicating Bad Request 
-        # (you can learn more about HTTP response status codes here)
-        #raise HTTPException(status_code=400, detail="Invalid file format. Only CSV Files accepted.")
+    # Raise a HTTP 400 Exception, indicating Bad Request
+    # (you can learn more about HTTP response status codes here)
+    # raise HTTPException(status_code=400, detail="Invalid file format. Only CSV Files accepted.")
