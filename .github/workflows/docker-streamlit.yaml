@@ -9,7 +9,7 @@ env:
 on:
   push:
     branches: main
-    paths: $DIRECTORY/**
+    paths: ./${{ env.PREFIX }}/${{ env.DIRECTORY }}/**
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -34,7 +34,7 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v3
         with:
-          file: ./${{ env.DIRECTORY }}/Dockerfile
+          file: ./${{ env.PREFIX }}/${{ env.DIRECTORY }}/Dockerfile
           push: true
           tags: ${{ env.DIRECTORY }}:${{ env.VERSION }}
           #context: .
