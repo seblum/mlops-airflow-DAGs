@@ -1,4 +1,4 @@
-name: Docker CI fastAPI
+name: Docker CI fastapi
 
 env:
   PREFIX: docker-apps
