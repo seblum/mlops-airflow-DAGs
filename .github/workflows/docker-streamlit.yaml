@@ -1,7 +1,7 @@
 name: Docker CI streamlit
 
 env:
-  DIRECTORY: docker-apps/streamlit-inferece
+  DIRECTORY: docker-apps/streamlit-inference
   DOCKERREPO: seblum/model-inference
 
 on:
