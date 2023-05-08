@@ -5,9 +5,9 @@ FROM python:3.8-slim-buster
 ARG directory=./fastAPI-serving
 
 # env in kubernetes einfügen
-ENV MLFLOW_TRACKING_URI = "1234"
-ENV MLFLOW_MODEL_NAME = "1234"
-ENV MLFLOW_MODEL_VERSION = "1234"
+ENV MLFLOW_TRACKING_URI = "host.docker.internal:5008"
+ENV MLFLOW_MODEL_NAME = "basic-keras-cnn"
+ENV MLFLOW_MODEL_VERSION = "5"
 
 COPY /requirements.txt /app/requirements.txt
 

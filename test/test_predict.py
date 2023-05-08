@@ -16,6 +16,7 @@ file_path = "/Users/sebastian.blum/Documents/Personal/mlops-airflow-DAGs/test/da
 #print(open(file_path, 'rb'))
 files = {'file': open(file_path, 'rb')}
 
+print(open(file_path, 'rb'))
 
 #print(files)
 #print(files)
