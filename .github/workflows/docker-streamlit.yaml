@@ -1,8 +1,10 @@
 name: Docker CI streamlit
 
 env:
-  DIRECTORY: docker-apps/streamlit-inference
+  PREFIX: docker-apps
+  DIRECTORY: streamlit-inference
   DOCKERREPO: seblum/model-inference
+  VERSION: v1
 
 on:
   push:
@@ -34,5 +36,5 @@ jobs:
         with:
           file: ./${{ env.DIRECTORY }}/Dockerfile
           push: true
-          tags: ${{ env.DOCKERREPO }}:${{ env.DIRECTORY }}
+          tags: ${{ env.DIRECTORY }}:${{ env.VERSION }}
           #context: .

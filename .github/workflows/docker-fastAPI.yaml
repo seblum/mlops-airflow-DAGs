@@ -1,9 +1,11 @@
 name: Docker CI fastAPI
 
 env:
-  DIRECTORY: docker-apps/fastAPI-serving
+  PREFIX: docker-apps
+  DIRECTORY: fastAPI-serving
   DOCKERREPO: seblum/model-inference
-
+  VERSION: v1
+  
 on:
   push:
     branches: main
@@ -34,5 +36,5 @@ jobs:
         with:
           file: ./${{ env.DIRECTORY }}/Dockerfile
           push: true
-          tags: ${{ env.DOCKERREPO }}:${{ env.DIRECTORY }}
+          tags: ${{ env.DIRECTORY }}:${{ env.VERSION }}
           #context: .
