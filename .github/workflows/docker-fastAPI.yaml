@@ -9,7 +9,7 @@ env:
 on:
   push:
     branches: main
-    paths: ./${{ env.PREFIX }}/${{ env.DIRECTORY }}/**
+    paths: ${{ env.PREFIX }}/${{ env.DIRECTORY }}/**
   pull_request:
     branches: [ main ]
   workflow_dispatch:
