@@ -9,5 +9,5 @@ run:
 	#source .venv-airflow-dags/bin/activate
 	mlflow ui -p 5008 &
 	echo "> mlflow running"
-	airflow standalone & 
+	airflow standalone &
 	echo "> airflow running"

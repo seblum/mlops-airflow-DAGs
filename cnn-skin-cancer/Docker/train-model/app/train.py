@@ -27,7 +27,8 @@ params = {
 model = get_model()
 RUN_NAME = "resnet50-cnn"
 
-def train_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, model, params:dict,run_name:str,**kwargs):
+
+def train_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, model, params: dict, run_name: str, **kwargs):
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
     ti = kwargs["ti"]
@@ -37,7 +38,7 @@ def train_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, model, para
     path_X_test = ti.xcom_pull(key="path_X_test", task_ids="run_preprocessing")
     path_y_test = ti.xcom_pull(key="path_y_test", task_ids="run_preprocessing")
 
-    # TODO: replace with s3 load    
+    # TODO: replace with s3 load
     X_train = np.load(f"{path_X_train}")
     y_train = np.load(f"{path_y_train}")
     X_test = np.load(f"{path_X_test}")

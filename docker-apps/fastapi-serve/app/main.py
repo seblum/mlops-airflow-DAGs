@@ -51,7 +51,7 @@ async def predict(file: UploadFile = File(...)):
         np_image = np_image / 255.0
         np_image = np_image.reshape(1, 224, 224, 3)
         return np_image
-    
+
     if file.filename.endswith(".jpg"):
         print("[+] Read File")
         image = _read_imagefile(await file.read())

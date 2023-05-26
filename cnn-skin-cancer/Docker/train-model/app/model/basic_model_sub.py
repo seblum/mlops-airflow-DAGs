@@ -22,16 +22,15 @@ params = {
 # https://towardsdatascience.com/model-sub-classing-and-custom-training-loop-from-scratch-in-tensorflow-2-cc1d4f10fb4e
 
 
-
 class BasicNet(Model):
-    def __init__(self, params:dict):
+    def __init__(self, params: dict):
         super(BasicNet, self).__init__()
-        #creating layers in initializer
+        # creating layers in initializer
         self.conv_input = layers.Conv2D(
             64,
             kernel_size=(3, 3),
             padding="Same",
-            #input_shape=params.get("input_shape"),
+            # input_shape=params.get("input_shape"),
             activation=params.get("activation"),
             kernel_initializer=params.get("kernel_initializer_glob"),
         )
@@ -43,8 +42,8 @@ class BasicNet(Model):
             activation=params.get("activation"),
             kernel_initializer=params.get("kernel_initializer_glob"),
         )
-        self.dpo = layers.Dropout(0.25),
-        self.flatten = layers.Flatten(),
+        self.dpo = (layers.Dropout(0.25),)
+        self.flatten = (layers.Flatten(),)
         self.fc2 = layers.Dense(
             128, activation=params.get("activation"), kernel_initializer=params.get("kernel_initializer_norm")
         )
@@ -70,17 +69,17 @@ class BasicNet(Model):
         x = layers.Input(shape=raw_shape)
         return Model(inputs=[x], outputs=self.call(x))
 
+
 input_layer = params.get("input_shape")
 model = BasicNet(params)
 print(model.summary(expand_nested=True))
 
 model.compile(optimizer=params.get("optimizer"), loss=params.get("loss"), metrics=params.get("metrics"))
-#model.summary()
+# model.summary()
 
 # The first call to the `cm` will create the weights
-# y = cm(tf.ones(shape=(0,*raw_input))) 
+# y = cm(tf.ones(shape=(0,*raw_input)))
 
 model.build_graph(input_layer).summary()
 
-#model = Model(inputs=input_layer, outputs=x)
-
+# model = Model(inputs=input_layer, outputs=x)

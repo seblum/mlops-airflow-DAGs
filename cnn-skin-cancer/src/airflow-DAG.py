@@ -85,14 +85,18 @@ serve_fastapi_app_op = DockerOperator(
     task_id="serve_fastapi_app",
     provide_context=True,
     # xcom.pull serving_model_name
-    environment={"MLFLOW_TRACKING_URI": "host.docker.internal:5008", "MLFLOW_MODEL_NAME": "basic-keras-cnn", "MLFLOW_MODEL_VERSION": 5},
-    image='seblum/model-serving:fastapi-serve',
-    container_name='fastapi-serve',
-    api_version='auto',
+    environment={
+        "MLFLOW_TRACKING_URI": "host.docker.internal:5008",
+        "MLFLOW_MODEL_NAME": "basic-keras-cnn",
+        "MLFLOW_MODEL_VERSION": 5,
+    },
+    image="seblum/model-serving:fastapi-serve",
+    container_name="fastapi-serve",
+    api_version="auto",
     auto_remove=True,
-    #command="echo hello",
-    #docker_url="unix://var/run/docker.sock", # default
-    #network_mode="bridge",
+    # command="echo hello",
+    # docker_url="unix://var/run/docker.sock", # default
+    # network_mode="bridge",
     dag=dag,
 )
 
@@ -100,19 +104,19 @@ serve_streamlit_app_op = DockerOperator(
     task_id="serve_streamlit_app",
     provide_context=True,
     environment={"FASTAPI_SERVING_IP": "host.docker.internal", "FASTAPI_SERVING_PORT": 80},
-    image='seblum/model-serving:streamlit-inference',
-    container_name='streamlit-inference',
-    api_version='auto',
+    image="seblum/model-serving:streamlit-inference",
+    container_name="streamlit-inference",
+    api_version="auto",
     auto_remove=True,
-    #command="echo hello",
-    #docker_url="unix://var/run/docker.sock", # default
-    #network_mode="bridge",
+    # command="echo hello",
+    # docker_url="unix://var/run/docker.sock", # default
+    # network_mode="bridge",
     dag=dag,
 )
 
 # set task dependencies
-run_preprocessing_op >> [train_basic_model_op,train_crossval_model_op,train_resnet50_op]
+run_preprocessing_op >> [train_basic_model_op, train_crossval_model_op, train_resnet50_op]
 
-[train_basic_model_op,train_crossval_model_op,train_resnet50_op] >> compare_models_op
+[train_basic_model_op, train_crossval_model_op, train_resnet50_op] >> compare_models_op
 
-compare_models_op >> [serve_streamlit_app_op,serve_fastapi_app_op]
+compare_models_op >> [serve_streamlit_app_op, serve_fastapi_app_op]

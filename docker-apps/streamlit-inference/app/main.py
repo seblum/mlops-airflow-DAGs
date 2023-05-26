@@ -36,6 +36,6 @@ if test_image:
             st.json(output.json())
             st.download_button(
                 label="Download",
-                data=json.dumps(output.json()), # Download as JSON file object
+                data=json.dumps(output.json()),  # Download as JSON file object
                 file_name="cnn_skin_cancer_prediction_results.json",
             )

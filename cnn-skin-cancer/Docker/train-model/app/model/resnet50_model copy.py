@@ -11,7 +11,8 @@ from tensorflow.keras.models import Model
 # ----- ----- ----- ----- ----- -----
 ## RESNET 50
 
-class resnet():
+
+class resnet:
     params = {
         "num_classes": 2,
         "input_shape": (224, 224, 3),
@@ -40,17 +41,19 @@ class resnet():
 
     return model
 
+
 # https://towardsdatascience.com/tensorflow-class-inheritance-beautiful-code-59d2eb7cdfce
 # https://towardsdatascience.com/model-sub-classing-and-custom-training-loop-from-scratch-in-tensorflow-2-cc1d4f10fb4e
+
 
 class LeNet5(tf.keras.Model):
     def __init__(self):
         super(LeNet5, self).__init__()
-        #creating layers in initializer
-        self.conv1 = Conv2D(filters=6, kernel_size=(5,5), padding="same", activation="relu")
-        self.max_pool2x2 = MaxPool2D(pool_size=(2,2))
-        self.conv2 = Conv2D(filters=16, kernel_size=(5,5), padding="same", activation="relu")
-        self.conv3 = Conv2D(filters=120, kernel_size=(5,5), padding="same", activation="relu")
+        # creating layers in initializer
+        self.conv1 = Conv2D(filters=6, kernel_size=(5, 5), padding="same", activation="relu")
+        self.max_pool2x2 = MaxPool2D(pool_size=(2, 2))
+        self.conv2 = Conv2D(filters=16, kernel_size=(5, 5), padding="same", activation="relu")
+        self.conv3 = Conv2D(filters=120, kernel_size=(5, 5), padding="same", activation="relu")
         self.flatten = Flatten()
         self.fc2 = Dense(units=84, activation="relu")
         self.fc3 = Dense(units=10, activation="softmax")
@@ -66,10 +69,17 @@ class LeNet5(tf.keras.Model):
         flatten = self.flatten(conv3)
         fc2 = self.fc2(flatten)
         fc3 = self.fc3(fc2)
-        
+
         return fc3
 
-input_layer = Input(shape=(32,32,3,))
+
+input_layer = Input(
+    shape=(
+        32,
+        32,
+        3,
+    )
+)
 x = LeNet5()(input_layer)
 
 model = Model(inputs=input_layer, outputs=x)
