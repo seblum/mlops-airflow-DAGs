@@ -39,7 +39,8 @@ def run_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, **kwa
         folder_malignant_test = f"{DATAPATH}test/malignant"
 
         read = lambda imname: np.asarray(Image.open(imname).convert("RGB"))
-
+    
+        # TODO: replace with s3 load    
         def _load_and_convert_images(folder_path: str):
             ims = [read(os.path.join(folder_path, filename)) for filename in os.listdir(folder_path)]
             return np.array(ims, dtype="uint8")
@@ -101,6 +102,7 @@ def run_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, **kwa
         X_train = X_train / 255.0
         X_test = X_test / 255.0
 
+        # TODO: replace with s3 save    
         np.save(f"{parent_path}/X_train.npy", X_train)
         np.save(f"{parent_path}/y_train.npy", y_train)
         np.save(f"{parent_path}/X_test.npy", X_test)

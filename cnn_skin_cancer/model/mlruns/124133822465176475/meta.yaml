@@ -1,6 +1,0 @@
-artifact_location: file:///Users/sebastian.blum/airflow/dags/cnn_skin_cancer/model/mlruns/124133822465176475
-creation_time: 1679601708473
-experiment_id: '124133822465176475'
-last_update_time: 1679601708473
-lifecycle_stage: active
-name: cnn_skin_cancer

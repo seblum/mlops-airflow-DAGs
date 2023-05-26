@@ -12,8 +12,7 @@ st.subheader("Skin Cancer Detection")
 # FastAPI endpoint
 FASTAPI_SERVING_IP = os.getenv("FASTAPI_SERVING_IP")
 FASTAPI_SERVING_PORT = os.getenv("FASTAPI_SERVING_PORT")
-endpoint = f"http://{FASTAPI_SERVING_IP}:{FASTAPI_SERVING_PORT}/predict"
-
+FASTAPI_ENDPOINT = f"http://{FASTAPI_SERVING_IP}:{FASTAPI_SERVING_PORT}/predict"
 
 # check for pngs?
 test_image = st.file_uploader("", type=["jpg"], accept_multiple_files=False)
@@ -32,11 +31,11 @@ if test_image:
     with col2:
         if st.button("Start Prediction"):
             with st.spinner("Prediction in Progress. Please Wait..."):
-                output = requests.post(endpoint, files=files, timeout=8000)
+                output = requests.post(FASTAPI_ENDPOINT, files=files, timeout=8000)
             st.success("Success! Click the Download button below to retrieve prediction results (JSON format)")
             st.json(output.json())
             st.download_button(
                 label="Download",
-                data=json.dumps(output.json()),  # Download as JSON file object
-                file_name="automl_prediction_results.json",
+                data=json.dumps(output.json()), # Download as JSON file object
+                file_name="cnn_skin_cancer_prediction_results.json",
             )
