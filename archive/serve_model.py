@@ -1,5 +1,6 @@
-import mlflow
 from pprint import pprint
+
+import mlflow
 
 
 def serve_model(mlflow_tracking_uri: str, **kwargs) -> str:

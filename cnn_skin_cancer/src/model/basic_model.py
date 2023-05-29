@@ -1,0 +1,154 @@
+import matplotlib.pyplot as plt
+import mlflow
+import mlflow.keras
+import numpy as np
+from keras import layers
+from keras.callbacks import ReduceLROnPlateau
+from keras.models import Sequential
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import (
+    GridSearchCV,
+    KFold,
+    cross_val_score,
+    train_test_split,
+)
+from sklearn.preprocessing import StandardScaler
+from tensorflow import keras
+
+
+def train_basic_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, **kwargs):
+    mlflow.set_tracking_uri(mlflow_tracking_uri)
+
+    ti = kwargs["ti"]
+
+    path_X_train = ti.xcom_pull(key="path_X_train", task_ids="run_preprocessing")
+    path_y_train = ti.xcom_pull(key="path_y_train", task_ids="run_preprocessing")
+    path_X_test = ti.xcom_pull(key="path_X_test", task_ids="run_preprocessing")
+    path_y_test = ti.xcom_pull(key="path_y_test", task_ids="run_preprocessing")
+
+    X_train = np.load(f"{path_X_train}")
+    y_train = np.load(f"{path_y_train}")
+    X_test = np.load(f"{path_X_test}")
+    y_test = np.load(f"{path_y_test}")
+
+    params = {
+        "num_classes": 2,
+        "input_shape": (224, 224, 3),
+        "activation": "relu",
+        "kernel_initializer_glob": "glorot_uniform",
+        "kernel_initializer_norm": "normal",
+        "optimizer": "adam",
+        "loss": "binary_crossentropy",
+        "metrics": ["accuracy"],
+        "validation_split": 0.2,
+        "epochs": 2,
+        "batch_size": 64,
+    }
+
+    model = Sequential(
+        [
+            # layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
+            layers.Conv2D(
+                64,
+                kernel_size=(3, 3),
+                padding="Same",
+                input_shape=params.get("input_shape"),
+                activation=params.get("activation"),
+                kernel_initializer=params.get("kernel_initializer_glob"),
+            ),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Dropout(0.25),
+            layers.Conv2D(
+                64,
+                kernel_size=(3, 3),
+                padding="Same",
+                activation=params.get("activation"),
+                kernel_initializer=params.get("kernel_initializer_glob"),
+            ),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Dropout(0.25),
+            layers.Flatten(),
+            layers.Dense(
+                128,
+                activation=params.get("activation"),
+                kernel_initializer=params.get("kernel_initializer_norm"),
+            ),
+            layers.Dense(params.get("num_classes"), activation="softmax"),
+        ]
+    )
+
+    model.compile(
+        optimizer=params.get("optimizer"),
+        loss=params.get("loss"),
+        metrics=params.get("metrics"),
+    )
+    model.summary()
+
+    # Set a learning rate annealer
+    learning_rate_reduction = ReduceLROnPlateau(monitor="accuracy", patience=5, verbose=1, factor=0.5, min_lr=1e-7)
+
+    run_name = "basic-keras-cnn"
+    with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=run_name) as run:
+        run_id = run.info.run_id
+        mlflow.log_params(params)
+        # mlflow.set_tag("env", "dev")
+
+        mlflow.keras.autolog()
+        history = model.fit(
+            X_train,
+            y_train,
+            validation_split=params.get("validation_split"),
+            epochs=params.get("epochs"),
+            batch_size=params.get("batch_size"),
+            verbose=1,
+            callbacks=[learning_rate_reduction],
+        )
+
+        mlflow.keras.autolog(disable=True)
+        model_uri = f"runs:/{run_id}/{run_name}"
+
+        # TODO: UserWarning: Starting a Matplotlib GUI outside of the main thread will likely fail.
+        # list all data in history
+        # print(history.history.keys())
+        # # summarize history for accuracy
+        # fig = plt.figure(figsize=(3, 6))
+        # plt.plot(history.history["accuracy"])
+        # plt.plot(history.history["val_accuracy"])
+        # plt.title("model accuracy")
+        # plt.ylabel("accuracy")
+        # plt.xlabel("epoch")
+        # plt.legend(["train", "test"], loc="upper left")
+        # mlflow.log_figure(fig, "accuracy.png")
+
+        # # summarize history for loss
+        # fig = plt.figure(figsize=(3, 6))
+        # plt.plot(history.history["loss"])
+        # plt.plot(history.history["val_loss"])
+        # plt.title("model loss")
+        # plt.ylabel("loss")
+        # plt.xlabel("epoch")
+        # plt.legend(["train", "test"], loc="upper left")
+        # mlflow.log_figure(fig, "loss.png")
+
+        # Testing model on test data to evaluate
+        y_pred = model.predict(X_test)
+        prediction_accuracy = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1))
+        mlflow.log_metric("prediction_accuracy", prediction_accuracy)
+        print(prediction_accuracy)
+
+        mlflow.keras.log_model(model, artifact_path=run_name)
+
+        mv = mlflow.register_model(model_uri, run_name)
+        print("Name: {}".format(mv.name))
+        print("Version: {}".format(mv.version))
+        print("Stage: {}".format(mv.current_stage))
+
+    kwargs["ti"].xcom_push(key=f"run_id-{run_name}", value=run_id)
+
+    # # Testing model on test data to evaluate
+    # y_pred = model.predict(X_test)
+
+    # # keras_model = mlflow.keras.load_model("runs:/96771d893a5e46159d9f3b49bf9013e2" + "/models")
+    # # predictions = keras_model.predict(x_test)
+
+    # print(accuracy_score(np.argmax(y_test, axis=1), y_pred))

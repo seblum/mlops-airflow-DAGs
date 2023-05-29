@@ -1,17 +1,16 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-from tensorflow import keras
-from PIL import Image
+import io
+import os
 from io import BytesIO
 
-import os
-import pandas as pd
-import io
-import numpy as np
 import mlflow
 import mlflow.keras
-
+import numpy as np
+import pandas as pd
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from PIL import Image
+from tensorflow import keras
 
 # Get environment variables
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")

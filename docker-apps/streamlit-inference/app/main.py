@@ -1,9 +1,10 @@
-import streamlit as st
-import requests
-import pandas as pd
 import io
 import json
 import os
+
+import pandas as pd
+import requests
+import streamlit as st
 from PIL import Image
 
 st.header("MLOps Engineering Project")

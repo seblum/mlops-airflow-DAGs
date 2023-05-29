@@ -1,27 +1,30 @@
+import os
+from glob import glob
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import os
-from glob import glob
 import seaborn as sns
 from PIL import Image
 
 np.random.seed(11)  # It's my lucky number
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split, KFold, cross_val_score, GridSearchCV
-from sklearn.metrics import accuracy_score
-
 import keras
-from keras.utils.np_utils import to_categorical  # used for converting labels to one-hot-encoding
-from keras.models import Sequential, Model
-from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPool2D
-from keras.utils.np_utils import to_categorical  # convert to one-hot-encoding
+from keras import backend as K
+from keras.callbacks import ReduceLROnPlateau
+from keras.layers import Conv2D, Dense, Dropout, Flatten, MaxPool2D
+from keras.models import Model, Sequential
 from keras.optimizers import Adam, RMSprop
 from keras.preprocessing.image import ImageDataGenerator
-from keras.callbacks import ReduceLROnPlateau
+from keras.utils.np_utils import to_categorical  # convert to one-hot-encoding
 from keras.wrappers.scikit_learn import KerasClassifier
-from keras import backend as K
-
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import (
+    GridSearchCV,
+    KFold,
+    cross_val_score,
+    train_test_split,
+)
+from sklearn.preprocessing import StandardScaler
 
 DATAPATH = "cnn-skin_cancer/data/"
 
