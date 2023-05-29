@@ -1,8 +1,8 @@
-name: Docker CI model-comparing
+name: Docker CI compare-models
 
 env:
   PREFIX: cnn_skin_cancer/Docker
-  DIRECTORY: model-comparing
+  DIRECTORY: compare-models
   DOCKERREPO: seblum/cnn-model
 
 on:
