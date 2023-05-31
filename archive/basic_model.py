@@ -1,21 +1,22 @@
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split, KFold, cross_val_score, GridSearchCV
-from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
-
-
-from tensorflow import keras
-from keras import layers
-from keras.models import Sequential
-from keras.callbacks import ReduceLROnPlateau
-
 import mlflow
 import mlflow.keras
 import numpy as np
+from keras import layers
+from keras.callbacks import ReduceLROnPlateau
+from keras.models import Sequential
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import (
+    GridSearchCV,
+    KFold,
+    cross_val_score,
+    train_test_split,
+)
+from sklearn.preprocessing import StandardScaler
+from tensorflow import keras
 
 
 def train_basic_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, **kwargs):
-
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
     ti = kwargs["ti"]
@@ -68,13 +69,19 @@ def train_basic_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, **kwa
             layers.Dropout(0.25),
             layers.Flatten(),
             layers.Dense(
-                128, activation=params.get("activation"), kernel_initializer=params.get("kernel_initializer_norm")
+                128,
+                activation=params.get("activation"),
+                kernel_initializer=params.get("kernel_initializer_norm"),
             ),
             layers.Dense(params.get("num_classes"), activation="softmax"),
         ]
     )
 
-    model.compile(optimizer=params.get("optimizer"), loss=params.get("loss"), metrics=params.get("metrics"))
+    model.compile(
+        optimizer=params.get("optimizer"),
+        loss=params.get("loss"),
+        metrics=params.get("metrics"),
+    )
     model.summary()
 
     # Set a learning rate annealer

@@ -1,9 +1,9 @@
-import mlflow
-from keras.optimizers import Adam, RMSprop
-import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score
+import mlflow
+import numpy as np
 from keras.callbacks import ReduceLROnPlateau
+from keras.optimizers import Adam, RMSprop
+from sklearn.metrics import accuracy_score
 from tensorflow.keras.applications.resnet50 import ResNet50
 
 # ----- ----- ----- ----- ----- -----
@@ -49,7 +49,11 @@ def train_resnet50_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, **
         classes=params.get("num_classes"),
     )
 
-    model.compile(optimizer=Adam(params.get("learning_rate")), loss=params.get("loss"), metrics=params.get("metrics"))
+    model.compile(
+        optimizer=Adam(params.get("learning_rate")),
+        loss=params.get("loss"),
+        metrics=params.get("metrics"),
+    )
 
     learning_rate_reduction = ReduceLROnPlateau(monitor="accuracy", patience=5, verbose=1, factor=0.5, min_lr=1e-7)
 

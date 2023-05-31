@@ -1,14 +1,14 @@
-import mlflow
-from keras.optimizers import Adam, RMSprop
-import numpy as np
 import matplotlib.pyplot as plt
+import mlflow
+import numpy as np
 from keras import backend as K
+from keras import layers
+from keras.callbacks import ReduceLROnPlateau
+from keras.models import Sequential
+from keras.optimizers import Adam, RMSprop
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 from tensorflow import keras
-from keras import layers
-from keras.models import Sequential
-from keras.callbacks import ReduceLROnPlateau
-from sklearn.metrics import accuracy_score
 
 # ----- ----- ----- ----- ----- -----
 # CROSS VALIDATION
@@ -59,6 +59,7 @@ def train_crossval_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, **
         for train, test in kfold.split(X_train, y_train):
             # create model
 
+            # basically a BasicNet()
             model = Sequential(
                 [
                     # layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
@@ -91,7 +92,11 @@ def train_crossval_model(mlflow_tracking_uri: str, mlflow_experiment_id: str, **
                 ]
             )
 
-            model.compile(optimizer=params.get("optimizer"), loss=params.get("loss"), metrics=params.get("metrics"))
+            model.compile(
+                optimizer=params.get("optimizer"),
+                loss=params.get("loss"),
+                metrics=params.get("metrics"),
+            )
             # Fit the model
             model.fit(
                 X_train[train],
