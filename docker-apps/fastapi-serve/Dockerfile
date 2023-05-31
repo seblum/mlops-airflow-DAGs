@@ -1,7 +1,5 @@
 FROM python:3.10.11-slim-buster
 
-# https://fastapi.tiangolo.com/deployment/docker/#build-a-docker-image-for-fastapi
-
 ARG directory=./docker-apps/fastapi-serve
 
 ENV MLFLOW_TRACKING_URI=host.docker.internal:5008
