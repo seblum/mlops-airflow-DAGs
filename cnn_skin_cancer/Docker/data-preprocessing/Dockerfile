@@ -9,9 +9,9 @@ COPY $docker_directory/requirements.txt /app/requirements.txt
 ENV MLFLOW_TRACKING_URI=http://host.docker.internal:5008
 ENV MLFLOW_EXPERIMENT_ID=578710797164334239
 ENV AWS_BUCKET=testskincancer
-ENV AWS_ACCESS_KEY_ID="AKIA4OKBSADP7ZWFBR46"
-ENV AWS_SECRET_ACCESS_KEY="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"
-
+ENV AWS_ACCESS_KEY_ID="default"
+ENV AWS_SECRET_ACCESS_KEY="default"
+ENV AWS_ROLE_NAME=default
 
 WORKDIR /app
 RUN pip3 install --upgrade pip
