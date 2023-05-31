@@ -3,14 +3,10 @@ import pendulum
 from airflow import DAG
 from airflow.operators.docker_operator import DockerOperator
 from airflow.operators.python import PythonOperator
-from cnn_skin_cancer.Docker.preprocessing.app.preprocessing import run_preprocessing
 from model.utils import Model_Class
 
 from cnn_skin_cancer.src.compare_models import compare_models
-
-# from cnn_skin_cancer.src.model.basic_model import train_basic_model
-# from cnn_skin_cancer.src.model.crossval_model import train_crossval_model
-# from cnn_skin_cancer.src.model.resnet50_model import train_resnet50_model
+from cnn_skin_cancer.src.preprocessing import preprocessing
 from cnn_skin_cancer.src.train import train_model
 
 # SET MLFLOW
@@ -81,7 +77,7 @@ dag = DAG(
 # run_preprocessing_op = PythonOperator(
 #     task_id="run_preprocessing",
 #     provide_context=True,
-#     python_callable=run_preprocessing,
+#     python_callable=preprocessing,
 #     op_kwargs={"mlflow_tracking_uri": MLFLOW_TRACKING_URI, "mlflow_experiment_id": mlflow_experiment_id},
 #     dag=dag,
 # )
@@ -106,7 +102,7 @@ data_preprocessing_op = DockerOperator(
 )
 
 # TODO: check whether I can run ENUM in docker
-op_kwargs_basic_model = op_kwargs_model_default.copy().update({"model_class": Model_Class.Basic})
+op_kwargs_basic_model = op_kwargs_model_default.copy().update({"model_class": Model_Class.Basic.name})
 train_basic_model_op = PythonOperator(
     task_id="train_basic_model",
     provide_context=True,
@@ -138,6 +134,21 @@ compare_models_op = PythonOperator(
     provide_context=True,
     op_kwargs={"mlflow_tracking_uri": MLFLOW_TRACKING_URI},
     python_callable=compare_models,
+    dag=dag,
+)
+
+
+compare_models_op = DockerOperator(
+    task_id="compare_models_op",
+    provide_context=True,
+    environment={"mlflow_tracking_uri": MLFLOW_TRACKING_URI},
+    image="seblum/cnn-model:compare-models",
+    container_name="compare_models",
+    api_version="auto",
+    auto_remove=True,
+    # command="echo hello",
+    # docker_url="unix://var/run/docker.sock", # default
+    # network_mode="bridge",
     dag=dag,
 )
 
@@ -178,7 +189,7 @@ serve_streamlit_app_op = DockerOperator(
 )
 
 # set task dependencies
-run_preprocessing_op >> [
+data_preprocessing_op >> [
     train_basic_model_op,
     train_crossval_model_op,
     train_resnet50_op,
@@ -186,4 +197,4 @@ run_preprocessing_op >> [
 
 [train_basic_model_op, train_crossval_model_op, train_resnet50_op] >> compare_models_op
 
-compare_models_op >> [serve_streamlit_app_op, serve_fastapi_app_op]
+# compare_models_op >> [serve_streamlit_app_op, serve_fastapi_app_op]

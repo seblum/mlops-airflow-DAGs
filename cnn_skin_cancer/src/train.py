@@ -2,10 +2,12 @@ import os
 from enum import Enum
 
 import mlflow
+import mlflow.keras
 import numpy as np
 from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau
-from keras.optimizers import Adam, RMSprop
+
+# from keras.optimizers import Adam, RMSprop
 from model.utils import Model_Class, get_model
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
@@ -23,26 +25,32 @@ def train_model(
 ):
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
-    ti = kwargs["ti"]
+    # ti = kwargs["ti"]
+    print("\n> Loading data...")
 
-    X_train_data_path = ti.xcom_pull(key="X_train_data_path", task_ids="run_preprocessing")
-    y_train_data_path = ti.xcom_pull(key="y_train_data_path", task_ids="run_preprocessing")
-    X_test_data_path = ti.xcom_pull(key="X_test_data_path", task_ids="run_preprocessing")
-    y_test_data_path = ti.xcom_pull(key="y_test_data_path", task_ids="run_preprocessing")
+    # X_train_data_path = ti.xcom_pull(key="X_train_data_path", task_ids="run_preprocessing")
+    # y_train_data_path = ti.xcom_pull(key="y_train_data_path", task_ids="run_preprocessing")
+    # X_test_data_path = ti.xcom_pull(key="X_test_data_path", task_ids="run_preprocessing")
+    # y_test_data_path = ti.xcom_pull(key="y_test_data_path", task_ids="run_preprocessing")
 
-    X_train = download_npy_from_s3(aws_bucket=aws_bucket, file_key=f"{X_train_data_path}")
-    y_train = download_npy_from_s3(aws_bucket=aws_bucket, file_key=f"{y_train_data_path}")
-    X_test = download_npy_from_s3(aws_bucket=aws_bucket, file_key=f"{X_test_data_path}")
-    y_test = download_npy_from_s3(aws_bucket=aws_bucket, file_key=f"{y_test_data_path}")
+    # for local testing
+    path_preprocessed = "preprocessed"
+    X_train_data_path = f"{path_preprocessed}/X_train.pkl"
+    y_train_data_path = f"{path_preprocessed}/y_train.pkl"
+    X_test_data_path = f"{path_preprocessed}/X_test.pkl"
+    y_test_data_path = f"{path_preprocessed}/y_test.pkl"
 
-    learning_rate_reduction = ReduceLROnPlateau(monitor="accuracy", patience=5, verbose=1, factor=0.5, min_lr=1e-7)
-    print(f"learning_rate_reduction: {learning_rate_reduction}")
+    X_train = download_npy_from_s3(s3_bucket=aws_bucket, file_key=f"{X_train_data_path}")
+    y_train = download_npy_from_s3(s3_bucket=aws_bucket, file_key=f"{y_train_data_path}")
+    X_test = download_npy_from_s3(s3_bucket=aws_bucket, file_key=f"{X_test_data_path}")
+    y_test = download_npy_from_s3(s3_bucket=aws_bucket, file_key=f"{y_test_data_path}")
 
+    print("\n> Training model...")
     run_name = model_class.value
     with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=run_name) as run:
-        run_id = run.info.run_id
 
         mlflow.log_params(model_params)
+        learning_rate_reduction = ReduceLROnPlateau(monitor="accuracy", patience=5, verbose=1, factor=0.5, min_lr=1e-7)
 
         if model_class == Model_Class.CrossVal:
             kfold = KFold(n_splits=3, shuffle=True, random_state=11)
@@ -75,20 +83,23 @@ def train_model(
             )
             mlflow.keras.autolog(disable=True)
 
+        run_id = run.info.run_id
         model_uri = f"runs:/{run_id}/{run_name}"
 
         # Testing model on test data to evaluate
+        print("\n> Testing model...")
         y_pred = model.predict(X_test)
         prediction_accuracy = accuracy_score(np.argmax(y_test, axis=1), np.argmax(y_pred, axis=1))
         mlflow.log_metric("prediction_accuracy", prediction_accuracy)
-        print(prediction_accuracy)
+        print(f"Prediction Accuracy: {prediction_accuracy}")
 
-        mlflow.keras.log_model(model, artifact_path=run_name)
+        # mlflow.keras.log_model(model, artifact_path=run_name)
 
+        print("\n> Register model")
         mv = mlflow.register_model(model_uri, run_name)
-        print("Name: {}".format(mv.name))
-        print("Version: {}".format(mv.version))
-        print("Stage: {}".format(mv.current_stage))
+        print(f"Name: {mv.name}")
+        print(f"Version: {mv.version}")
+        print(f"Stage: {mv.current_stage}")
 
     kwargs["ti"].xcom_push(key=f"run_id-{run_name}", value=run_id)
     kwargs["ti"].xcom_push(key=f"model_version-{run_name}", value=mv.version)
@@ -98,6 +109,7 @@ if __name__ == "__main__":
     mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
     mlflow_experiment_id = os.getenv("MLFLOW_EXPERIMENT_ID")
     aws_bucket = os.getenv("AWS_BUCKET")
+    model_class = os.getenv("MODEL_CLASS")
 
     # deleted afterwards
     model_params = {
@@ -117,15 +129,10 @@ if __name__ == "__main__":
         "verbose": 2,
     }
 
-    from model.utils import Model_Class
-
-    model_class = Model_Class.Basic
-    model_params = model_params
-
     train_model(
         mlflow_tracking_uri=mlflow_tracking_uri,
         mlflow_experiment_id=mlflow_experiment_id,
-        model_class=model_class,
+        model_class=Model_Class[model_class],
         model_params=model_params,
         aws_bucket=aws_bucket,
     )

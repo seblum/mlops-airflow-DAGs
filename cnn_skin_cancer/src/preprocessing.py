@@ -10,9 +10,6 @@ from sklearn.utils import shuffle
 from tqdm import tqdm
 from utils import list_files_in_bucket, read_image_from_s3, timeit, upload_npy_to_s3
 
-# s3://testskincancer/data/test/benign/1.jpg
-# https://testskincancer.s3.eu-central-1.amazonaws.com/data/test/benign/1.jpg
-
 
 @timeit
 def run_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_bucket: str, **kwargs) -> None:
@@ -32,7 +29,7 @@ def run_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_b
     @timeit
     def _load_and_convert_images(folder_path: str) -> np.array:
         ims = [
-            read_image_from_s3(bucket=aws_bucket, imname=filename)
+            read_image_from_s3(s3_bucket=aws_bucket, imname=filename)
             for filename in tqdm(list_files_in_bucket(folder_path)[-10:])
         ]
         return np.array(ims, dtype="uint8")
@@ -45,7 +42,7 @@ def run_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_b
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=f"{timestamp}_Preprocessing") as run:
-        print("> Loading images from S3...")
+        print("\n> Loading images from S3...")
         # Load in training pictures
         X_benign = _load_and_convert_images(folder_benign_train)
         X_malignant = _load_and_convert_images(folder_malignant_train)
@@ -54,13 +51,14 @@ def run_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_b
         X_benign_test = _load_and_convert_images(folder_benign_test)
         X_malignant_test = _load_and_convert_images(folder_malignant_test)
 
+        print("\n> Log data parameters")
         # Log train-test size in MLflow
-        mlflow.log_params("train_size_benign", X_benign.shape[0])
-        mlflow.log_params("train_size_malignant", X_malignant.shape[0])
-        mlflow.log_params("test_size_benign", X_benign_test.shape[0])
-        mlflow.log_params("test_size_malignant", X_malignant_test.shape[0])
+        mlflow.log_param("train_size_benign", X_benign.shape[0])
+        mlflow.log_param("train_size_malignant", X_malignant.shape[0])
+        mlflow.log_param("test_size_benign", X_benign_test.shape[0])
+        mlflow.log_param("test_size_malignant", X_malignant_test.shape[0])
 
-        print("> Preprocessing...")
+        print("\n> Preprocessing...")
         # Create labels
         y_benign = _create_label(X_benign)
         y_malignant = _create_label(X_malignant)
@@ -86,29 +84,25 @@ def run_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_b
         X_train = X_train / 255.0
         X_test = X_test / 255.0
 
-        # TODO: check for typehints
-        # can be deleted afterward
-        print(type(X_train))
-
-        print("> Upload numpy arrays to S3...")
+        print("\n> Upload numpy arrays to S3...")
         upload_npy_to_s3(
             data=X_train,
-            aws_bucket=aws_bucket,
+            s3_bucket=aws_bucket,
             file_key=f"{path_preprocessed}/X_train.pkl",
         )
         upload_npy_to_s3(
             data=y_train,
-            aws_bucket=aws_bucket,
+            s3_bucket=aws_bucket,
             file_key=f"{path_preprocessed}/y_train.pkl",
         )
         upload_npy_to_s3(
             data=X_test,
-            aws_bucket=aws_bucket,
+            s3_bucket=aws_bucket,
             file_key=f"{path_preprocessed}/X_test.pkl",
         )
         upload_npy_to_s3(
             data=y_test,
-            aws_bucket=aws_bucket,
+            s3_bucket=aws_bucket,
             file_key=f"{path_preprocessed}/y_test.pkl",
         )
 
