@@ -50,7 +50,6 @@ scikit-learn==1.2.2
 scipy==1.10.1
 seaborn==0.12.2
 six==1.16.0
-sklearn==0.0.post1
 tensorboard==2.11.2
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.1
@@ -65,3 +64,6 @@ virtualenv==20.21.0
 Werkzeug==2.2.3
 wrapt==1.15.0
 zipp==3.15.0
+mlflow==2.2.2
+s3fs==2023.5.0
+boto3

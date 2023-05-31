@@ -5,7 +5,7 @@ ARG app_directory=./cnn_skin_cancer/src
 
 COPY $docker_directory/requirements.txt /app/requirements.txt
 
-ENV MLFLOW_TRACKING_URI=host.docker.internal:5008
+ENV MLFLOW_TRACKING_URI=http://host.docker.internal:5008
 
 WORKDIR /app
 RUN pip3 install --upgrade pip
