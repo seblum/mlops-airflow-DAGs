@@ -166,3 +166,4 @@ cnn_skin_cancer/.DS_Store
 .venv-airflow-dags
 airflow_env
 .vars
+.notebook
