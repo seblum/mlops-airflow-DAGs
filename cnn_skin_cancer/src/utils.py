@@ -13,10 +13,11 @@ from PIL import Image
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
+AWS_REGION = os.getenv("AWS_REGION")
 
 
 def _get_role_access(session):
-    sts = session.client("sts")
+    sts = session.client("sts", region_name=AWS_REGION)
     account_id = sts.get_caller_identity()["Account"]
     response = sts.assume_role(
         RoleArn=f"arn:aws:iam::{account_id}:role/{AWS_ROLE_NAME}", RoleSessionName=f"{AWS_ROLE_NAME}-session"
@@ -30,9 +31,12 @@ def _get_role_access(session):
 
 def _get_sessions():
     # https://www.learnaws.org/2022/09/30/aws-boto3-assume-role/
-    user_session = boto3.Session(aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+    user_session = boto3.Session(
+        region_name=AWS_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+    )
     aws_access_key_id, aws_secret_access_key, aws_session_token = _get_role_access(user_session)
     boto3_role_session = boto3.Session(
+        region_name=AWS_REGION,
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
         aws_session_token=aws_session_token,
@@ -43,6 +47,7 @@ def _get_sessions():
     return boto3_role_session, s3fs_session
 
 
+# need to check that I instatiate this within airflow dags with correct access key
 boto3_session, s3fs_session = _get_sessions()
 
 

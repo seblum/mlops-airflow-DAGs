@@ -8,11 +8,17 @@ from keras.utils.np_utils import (  # used for converting labels to one-hot-enco
 )
 from sklearn.utils import shuffle
 from tqdm import tqdm
-from utils import list_files_in_bucket, read_image_from_s3, timeit, upload_npy_to_s3
+
+from cnn_skin_cancer.src.utils import (
+    list_files_in_bucket,
+    read_image_from_s3,
+    timeit,
+    upload_npy_to_s3,
+)
 
 
 @timeit
-def run_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_bucket: str, **kwargs) -> None:
+def data_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_bucket: str, **kwargs) -> None:
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
     # Set paths within s3
@@ -117,7 +123,7 @@ if __name__ == "__main__":
     mlflow_experiment_id = os.getenv("MLFLOW_EXPERIMENT_ID")
     aws_bucket = os.getenv("AWS_BUCKET")
 
-    run_preprocessing(
+    data_preprocessing(
         mlflow_tracking_uri=mlflow_tracking_uri,
         mlflow_experiment_id=mlflow_experiment_id,
         aws_bucket=aws_bucket,

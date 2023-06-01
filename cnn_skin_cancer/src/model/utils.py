@@ -1,8 +1,9 @@
 from enum import Enum
 
 from keras.models import Model
-from model.basic_model import BasicNet
-from model.resnet50_model import ResNet50
+
+from cnn_skin_cancer.src.model.basic_model import BasicNet
+from cnn_skin_cancer.src.model.resnet50_model import ResNet50
 
 # https://towardsdatascience.com/tensorflow-class-inheritance-beautiful-code-59d2eb7cdfce
 # https://towardsdatascience.com/model-sub-classing-and-custom-training-loop-from-scratch-in-tensorflow-2-cc1d4f10fb4e

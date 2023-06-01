@@ -6,13 +6,13 @@ import mlflow.keras
 import numpy as np
 from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau
-
-# from keras.optimizers import Adam, RMSprop
-from model.utils import Model_Class, get_model
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 from tensorflow.keras.applications.resnet50 import ResNet50
-from utils import download_npy_from_s3
+
+# from keras.optimizers import Adam, RMSprop
+from cnn_skin_cancer.src.model.utils import Model_Class, get_model
+from cnn_skin_cancer.src.utils import download_npy_from_s3
 
 
 def train_model(

@@ -52,6 +52,7 @@ def compare_models(mlflow_tracking_uri: str, **kwargs) -> None:
 
     kwargs["ti"].xcom_push(key="serving_model_name", value=acc_dict_model)
     kwargs["ti"].xcom_push(key="serving_model_uri", value=model_uri)
+    kwargs["ti"].xcom_push(key="serving_model_version", value=latest_model_version)
 
 
 if __name__ == "__main__":

@@ -12,6 +12,7 @@ ENV AWS_BUCKET=testskincancer
 ENV AWS_ACCESS_KEY_ID="default"
 ENV AWS_SECRET_ACCESS_KEY="default"
 ENV AWS_ROLE_NAME=default
+ENV AWS_REGION=us-east-1
 
 WORKDIR /app
 RUN pip3 install --upgrade pip
