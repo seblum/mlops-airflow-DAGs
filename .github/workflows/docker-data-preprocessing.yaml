@@ -4,11 +4,14 @@ env:
   PREFIX: cnn_skin_cancer/Docker
   DIRECTORY: data-preprocessing
   DOCKERREPO: seblum/cnn-model
+  SOURCEDIR: cnn_skin_cancer/src
 
 on:
   push:
     branches: main
-    paths: $PREFIX/$DIRECTORY/**
+    paths:
+      - $SOURCEDIR/preprocessing.py
+      - $SOURCEDIR/utils.py
   pull_request:
     branches: [ main ]
   workflow_dispatch:

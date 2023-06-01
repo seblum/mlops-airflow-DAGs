@@ -4,11 +4,15 @@ env:
   PREFIX: cnn_skin_cancer/Docker
   DIRECTORY: model-training
   DOCKERREPO: seblum/cnn-model
+  SOURCEDIR: cnn_skin_cancer/src
 
 on:
   push:
     branches: main
-    paths: $PREFIX/$DIRECTORY/**
+    paths:
+      - $SOURCEDIR/model/*
+      - $SOURCEDIR/train.py
+      - $SOURCEDIR/utils.py
   pull_request:
     branches: [ main ]
   workflow_dispatch:

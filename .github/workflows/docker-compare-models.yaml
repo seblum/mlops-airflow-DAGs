@@ -4,11 +4,13 @@ env:
   PREFIX: cnn_skin_cancer/Docker
   DIRECTORY: compare-models
   DOCKERREPO: seblum/cnn-model
+  SOURCEDIR: cnn_skin_cancer/src
 
 on:
   push:
     branches: main
-    paths: $PREFIX/$DIRECTORY/**
+    paths:
+      - $SOURCEDIR/compare_models.py
   pull_request:
     branches: [ main ]
   workflow_dispatch:
