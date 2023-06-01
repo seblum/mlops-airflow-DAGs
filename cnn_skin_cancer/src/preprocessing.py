@@ -8,13 +8,7 @@ from keras.utils.np_utils import (  # used for converting labels to one-hot-enco
 )
 from sklearn.utils import shuffle
 from tqdm import tqdm
-
-from cnn_skin_cancer.src.utils import (
-    list_files_in_bucket,
-    read_image_from_s3,
-    timeit,
-    upload_npy_to_s3,
-)
+from utils import list_files_in_bucket, read_image_from_s3, timeit, upload_npy_to_s3
 
 
 @timeit
