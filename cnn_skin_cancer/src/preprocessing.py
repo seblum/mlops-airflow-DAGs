@@ -15,10 +15,9 @@ from utils import list_files_in_bucket, read_image_from_s3, timeit, upload_npy_t
 def data_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_bucket: str, **kwargs) -> None:
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
-    print(kwargs["ti"])
-
-    kwargs = os.getenv("ti")
+    ti = os.getenv("ti")
     print(kwargs)
+    print(ti)
     # Set paths within s3
     path_raw_data = f"s3://{aws_bucket}/data/"
     path_preprocessed = "preprocessed"
@@ -110,10 +109,10 @@ def data_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_
             file_key=f"{path_preprocessed}/y_test.pkl",
         )
 
-        kwargs.xcom_push(key="X_train_data_path", value=f"{path_preprocessed}/X_train.pkl")
-        kwargs.xcom_push(key="y_train_data_path", value=f"{path_preprocessed}/y_train.pkl")
-        kwargs["ti"].xcom_push(key="X_test_data_path", value=f"{path_preprocessed}/X_test.pkl")
-        kwargs["ti"].xcom_push(key="y_test_data_path", value=f"{path_preprocessed}/y_test.pkl")
+        ti.xcom_push(key="X_train_data_path", value=f"{path_preprocessed}/X_train.pkl")
+        ti.xcom_push(key="y_train_data_path", value=f"{path_preprocessed}/y_train.pkl")
+        ti.xcom_push(key="X_test_data_path", value=f"{path_preprocessed}/X_test.pkl")
+        ti.xcom_push(key="y_test_data_path", value=f"{path_preprocessed}/y_test.pkl")
 
 
 if __name__ == "__main__":
