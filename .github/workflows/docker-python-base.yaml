@@ -1,14 +1,13 @@
 name: Docker CI python-base
 
 env:
-  PREFIX: docker-apps
+  PREFIX: cnn_skin_cancer/Docker
   DIRECTORY: python-base
-  DOCKERREPO: seblum/model-serving
+  DOCKERREPO: seblum/cnn-model
 
 on:
   push:
     branches: main
-    paths: $PREFIX/$DIRECTORY/**
   pull_request:
     branches: [ main ]
   workflow_dispatch:
