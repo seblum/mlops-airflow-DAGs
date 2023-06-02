@@ -15,6 +15,10 @@ from utils import list_files_in_bucket, read_image_from_s3, timeit, upload_npy_t
 def data_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_bucket: str, **kwargs) -> None:
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
+    print(kwargs)
+
+    kwargs_1 = os.getenv("ti")
+    print(kwargs_1)
     # Set paths within s3
     path_raw_data = f"s3://{aws_bucket}/data/"
     path_preprocessed = "preprocessed"
