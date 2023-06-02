@@ -110,8 +110,8 @@ def data_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_
             file_key=f"{path_preprocessed}/y_test.pkl",
         )
 
-        kwargs["ti"].xcom_push(key="X_train_data_path", value=f"{path_preprocessed}/X_train.pkl")
-        kwargs["ti"].xcom_push(key="y_train_data_path", value=f"{path_preprocessed}/y_train.pkl")
+        kwargs.xcom_push(key="X_train_data_path", value=f"{path_preprocessed}/X_train.pkl")
+        kwargs.xcom_push(key="y_train_data_path", value=f"{path_preprocessed}/y_train.pkl")
         kwargs["ti"].xcom_push(key="X_test_data_path", value=f"{path_preprocessed}/X_test.pkl")
         kwargs["ti"].xcom_push(key="y_test_data_path", value=f"{path_preprocessed}/y_test.pkl")
 
