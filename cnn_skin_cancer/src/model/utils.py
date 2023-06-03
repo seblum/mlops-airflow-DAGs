@@ -1,8 +1,8 @@
 from enum import Enum
 
-from basic_model import BasicNet
 from keras.models import Model
-from resnet50_model import ResNet50
+from model.basic_model import BasicNet
+from model.resnet50_model import ResNet50
 
 # https://towardsdatascience.com/tensorflow-class-inheritance-beautiful-code-59d2eb7cdfce
 # https://towardsdatascience.com/model-sub-classing-and-custom-training-loop-from-scratch-in-tensorflow-2-cc1d4f10fb4e
