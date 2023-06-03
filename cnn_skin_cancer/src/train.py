@@ -1,4 +1,6 @@
+import json
 import os
+from datetime import datetime
 from enum import Enum
 
 import mlflow
@@ -6,13 +8,13 @@ import mlflow.keras
 import numpy as np
 from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau
+
+# from keras.optimizers import Adam, RMSprop
+from model.utils import Model_Class, get_model
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 from tensorflow.keras.applications.resnet50 import ResNet50
-
-# from keras.optimizers import Adam, RMSprop
-from cnn_skin_cancer.src.model.utils import Model_Class, get_model
-from cnn_skin_cancer.src.utils import download_npy_from_s3
+from utils import AWSSession, download_npy_from_s3
 
 
 def train_model(
@@ -21,6 +23,7 @@ def train_model(
     model_class: Enum,
     model_params: dict,
     aws_bucket: str,
+    import_dict: dict = {},
     **kwargs,
 ):
     mlflow.set_tracking_uri(mlflow_tracking_uri)
@@ -28,27 +31,47 @@ def train_model(
     # ti = kwargs["ti"]
     print("\n> Loading data...")
 
-    # X_train_data_path = ti.xcom_pull(key="X_train_data_path", task_ids="run_preprocessing")
-    # y_train_data_path = ti.xcom_pull(key="y_train_data_path", task_ids="run_preprocessing")
-    # X_test_data_path = ti.xcom_pull(key="X_test_data_path", task_ids="run_preprocessing")
-    # y_test_data_path = ti.xcom_pull(key="y_test_data_path", task_ids="run_preprocessing")
+    X_train_data_path = import_dict.get("X_train_data_path")
+    y_train_data_path = import_dict.get("y_train_data_path")
+    X_test_data_path = import_dict.get("X_test_data_path")
+    y_test_data_path = import_dict.get("y_test_data_path")
+    print(y_train_data_path)
+    # # X_train_data_path = ti.xcom_pull(key="X_train_data_path", task_ids="run_preprocessing")
+    # # y_train_data_path = ti.xcom_pull(key="y_train_data_path", task_ids="run_preprocessing")
+    # # X_test_data_path = ti.xcom_pull(key="X_test_data_path", task_ids="run_preprocessing")
+    # # y_test_data_path = ti.xcom_pull(key="y_test_data_path", task_ids="run_preprocessing")
 
-    # for local testing
-    path_preprocessed = "preprocessed"
-    X_train_data_path = f"{path_preprocessed}/X_train.pkl"
-    y_train_data_path = f"{path_preprocessed}/y_train.pkl"
-    X_test_data_path = f"{path_preprocessed}/X_test.pkl"
-    y_test_data_path = f"{path_preprocessed}/y_test.pkl"
+    # # for local testing
+    # path_preprocessed = "preprocessed"
+    # X_train_data_path = f"{path_preprocessed}/X_train.pkl"
+    # y_train_data_path = f"{path_preprocessed}/y_train.pkl"
+    # X_test_data_path = f"{path_preprocessed}/X_test.pkl"
+    # y_test_data_path = f"{path_preprocessed}/y_test.pkl"
 
-    X_train = download_npy_from_s3(s3_bucket=aws_bucket, file_key=f"{X_train_data_path}")
-    y_train = download_npy_from_s3(s3_bucket=aws_bucket, file_key=f"{y_train_data_path}")
-    X_test = download_npy_from_s3(s3_bucket=aws_bucket, file_key=f"{X_test_data_path}")
-    y_test = download_npy_from_s3(s3_bucket=aws_bucket, file_key=f"{y_test_data_path}")
+    # read_image = lambda imname: np.asarray(Image.open(imname).convert("RGB"))
+    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
+    AWS_REGION = os.getenv("AWS_REGION")
+
+    # need to check that I instatiate this within airflow dags with correct access key
+    aws_session = AWSSession(
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        aws_role_name=AWS_ROLE_NAME,
+    )
+    aws_session.set_sessions()
+
+    X_train = aws_session.download_npy_from_s3(s3_bucket=aws_bucket, file_key=X_train_data_path)
+    y_train = aws_session.download_npy_from_s3(s3_bucket=aws_bucket, file_key=y_train_data_path)
+    X_test = aws_session.download_npy_from_s3(s3_bucket=aws_bucket, file_key=X_test_data_path)
+    y_test = aws_session.download_npy_from_s3(s3_bucket=aws_bucket, file_key=y_test_data_path)
 
     print("\n> Training model...")
     run_name = model_class.value
-    with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=run_name) as run:
-
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=f"{timestamp}-{run_name}") as run:
         mlflow.log_params(model_params)
         learning_rate_reduction = ReduceLROnPlateau(monitor="accuracy", patience=5, verbose=1, factor=0.5, min_lr=1e-7)
 
@@ -101,8 +124,21 @@ def train_model(
         print(f"Version: {mv.version}")
         print(f"Stage: {mv.current_stage}")
 
-    kwargs["ti"].xcom_push(key=f"run_id-{run_name}", value=run_id)
-    kwargs["ti"].xcom_push(key=f"model_version-{run_name}", value=mv.version)
+    # # Create dictionary with S3 paths to return
+    # return_dict = {
+    #     f"run_id-{run_name}": run_id,
+    #     f"model_version-{run_name}": mv.version
+    # }
+    # return json.dumps(return_dict)
+
+    # Create dictionary with S3 paths to return
+
+    return run_id, mv.version, mv.name, mv.current_stage
+
+    # print(f"run_id-{run_name}" run_id)
+    # print(f"model_version-{run_name}" mv.version)
+    # kwargs["ti"].xcom_push(key=f"run_id-{run_name}", value=run_id)
+    # kwargs["ti"].xcom_push(key=f"model_version-{run_name}", value=mv.version)
 
 
 if __name__ == "__main__":

@@ -18,7 +18,6 @@ class Model_Class(Enum):
 
 
 def get_model(model_name: str, model_params: dict) -> Model:
-
     # TODO update python version
     match model_name:
         case Model_Class.Basic:
