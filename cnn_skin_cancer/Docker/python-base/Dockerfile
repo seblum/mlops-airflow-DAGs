@@ -9,7 +9,11 @@ WORKDIR /app
 RUN pip3 install --upgrade pip
 RUN pip3 install --upgrade -r requirements.txt
 
+# COPY $app_directory/model /app/model
 COPY $app_directory/preprocessing.py /app
 COPY $app_directory/utils.py /app
+# COPY $app_directory/compare_models.py /app
+# COPY $app_directory/train.py /app
+# COPY $app_directory/ /app
 
 CMD ["python3"]

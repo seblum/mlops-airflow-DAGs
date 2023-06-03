@@ -2,53 +2,19 @@ import os
 import pickle
 import time
 from functools import wraps
-from typing import Any, Callable
+from typing import Any, Callable, Tuple
 
 import boto3
 import numpy as np
 import s3fs
+from boto3.session import Session
 from PIL import Image
 
-# read_image = lambda imname: np.asarray(Image.open(imname).convert("RGB"))
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
-AWS_REGION = os.getenv("AWS_REGION")
-
-
-def _get_role_access(session):
-    sts = session.client("sts", region_name=AWS_REGION)
-    account_id = sts.get_caller_identity()["Account"]
-    response = sts.assume_role(
-        RoleArn=f"arn:aws:iam::{account_id}:role/{AWS_ROLE_NAME}", RoleSessionName=f"{AWS_ROLE_NAME}-session"
-    )
-    return (
-        response["Credentials"]["AccessKeyId"],
-        response["Credentials"]["SecretAccessKey"],
-        response["Credentials"]["SessionToken"],
-    )
-
-
-def _get_sessions():
-    # https://www.learnaws.org/2022/09/30/aws-boto3-assume-role/
-    user_session = boto3.Session(
-        region_name=AWS_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY
-    )
-    aws_access_key_id, aws_secret_access_key, aws_session_token = _get_role_access(user_session)
-    boto3_role_session = boto3.Session(
-        region_name=AWS_REGION,
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        aws_session_token=aws_session_token,
-    )
-    s3fs_session = s3fs.S3FileSystem(
-        key=aws_access_key_id, secret=aws_secret_access_key, token=aws_session_token, anon=False
-    )
-    return boto3_role_session, s3fs_session
-
-
-# need to check that I instatiate this within airflow dags with correct access key
-boto3_session, s3fs_session = _get_sessions()
+# # read_image = lambda imname: np.asarray(Image.open(imname).convert("RGB"))
+# AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+# AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+# AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
+# AWS_REGION = os.getenv("AWS_REGION")
 
 
 def timeit(func) -> Callable[..., Any]:
@@ -64,24 +30,81 @@ def timeit(func) -> Callable[..., Any]:
     return timeit_wrapper
 
 
-@timeit
-def upload_npy_to_s3(data: np.array, s3_bucket: str, file_key: str) -> None:
-    with s3fs_session.open(f"{s3_bucket}/{file_key}", "wb") as f:
-        f.write(pickle.dumps(data))
+class AWSSession:
+    def __init__(
+        self,
+        region_name: str,
+        aws_access_key_id: str,
+        aws_secret_access_key: str,
+        aws_role_name: str,
+    ):
+        self.__region_name = region_name
+        self.__aws_access_key_id = aws_access_key_id
+        self.__aws_secret_access_key = aws_secret_access_key
+        self.__aws_role_name = aws_role_name
 
+        self.__boto3_role_session = None
+        self.__s3fs_session = None
 
-@timeit
-def download_npy_from_s3(s3_bucket: str, file_key: str) -> np.array:
-    return np.load(s3fs_session.open("{}/{}".format(s3_bucket, file_key)), allow_pickle=True)
+    def _get_role_access(self, session: Session) -> Tuple[str, str, str]:
+        sts = session.client("sts", region_name=self.__region_name)
+        account_id = sts.get_caller_identity()["Account"]
+        # https://www.learnaws.org/2022/09/30/aws-boto3-assume-role/
+        response = sts.assume_role(
+            RoleArn=f"arn:aws:iam::{account_id}:role/{self.__aws_role_name}",
+            RoleSessionName=f"{self.__aws_role_name}-session",
+        )
+        return (
+            response["Credentials"]["AccessKeyId"],
+            response["Credentials"]["SecretAccessKey"],
+            response["Credentials"]["SessionToken"],
+        )
 
+    def set_sessions(self):
+        user_session = boto3.Session(
+            region_name=self.__region_name,
+            aws_access_key_id=self.__aws_access_key_id,
+            aws_secret_access_key=self.__aws_secret_access_key,
+        )
+        (
+            tmp_aws_access_key_id,
+            tmp_aws_secret_access_key,
+            tmp_aws_session_token,
+        ) = self._get_role_access(user_session)
+        self.__boto3_role_session = boto3.Session(
+            region_name=self.__region_name,
+            aws_access_key_id=tmp_aws_access_key_id,
+            aws_secret_access_key=tmp_aws_secret_access_key,
+            aws_session_token=tmp_aws_session_token,
+        )
+        self.__s3fs_session = s3fs.S3FileSystem(
+            key=tmp_aws_access_key_id,
+            secret=tmp_aws_secret_access_key,
+            token=tmp_aws_session_token,
+            anon=False,
+        )
 
-def read_image_from_s3(s3_bucket: str, imname: str) -> np.array:
-    s3client = boto3_session.client("s3")
-    keyname = imname.split(f"{s3_bucket}/", 1)[1]
-    file_stream = s3client.get_object(Bucket=s3_bucket, Key=keyname)["Body"]
-    np_image = Image.open(file_stream).convert("RGB")
-    return np.asarray(np_image)
+    # def get_sessions(self) -> Tuple[Session, Session]:
+    #     return self.boto3_role_session, self.s3fs_session
 
+    @timeit
+    def upload_npy_to_s3(self, data: np.array, s3_bucket: str, file_key: str) -> None:
+        with self.__s3fs_session.open(f"{s3_bucket}/{file_key}", "wb") as f:
+            f.write(pickle.dumps(data))
 
-def list_files_in_bucket(path: str) -> list:
-    return s3fs_session.ls(path)
+    @timeit
+    def download_npy_from_s3(self, s3_bucket: str, file_key: str) -> np.array:
+        return np.load(
+            self.__s3fs_session.open("{}/{}".format(s3_bucket, file_key)),
+            allow_pickle=True,
+        )
+
+    def read_image_from_s3(self, s3_bucket: str, imname: str) -> np.array:
+        s3client = self.__boto3_role_session.client("s3")
+        keyname = imname.split(f"{s3_bucket}/", 1)[1]
+        file_stream = s3client.get_object(Bucket=s3_bucket, Key=keyname)["Body"]
+        np_image = Image.open(file_stream).convert("RGB")
+        return np.asarray(np_image)
+
+    def list_files_in_bucket(self, path: str) -> list:
+        return self.__s3fs_session.ls(path)

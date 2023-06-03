@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import datetime
 
@@ -8,19 +9,35 @@ from keras.utils.np_utils import (  # used for converting labels to one-hot-enco
 )
 from sklearn.utils import shuffle
 from tqdm import tqdm
-from utils import list_files_in_bucket, read_image_from_s3, timeit, upload_npy_to_s3
+from utils import AWSSession, timeit
 
 
 @timeit
-def data_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_bucket: str, **kwargs) -> None:
+def data_preprocessing(
+    mlflow_tracking_uri: str,
+    mlflow_experiment_id: str,
+    aws_bucket: str,
+    path_preprocessed: str = "preprocessed",
+    **kwargs,
+) -> json:
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
-    ti = os.getenv("ti")
-    print(kwargs)
-    print(ti)
+    # read_image = lambda imname: np.asarray(Image.open(imname).convert("RGB"))
+    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
+    AWS_REGION = os.getenv("AWS_REGION")
+
+    # need to check that I instatiate this within airflow dags with correct access key
+    aws_session = AWSSession(
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        aws_role_name=AWS_ROLE_NAME,
+    ).set_sessions()
+
     # Set paths within s3
     path_raw_data = f"s3://{aws_bucket}/data/"
-    path_preprocessed = "preprocessed"
 
     folder_benign_train = f"{path_raw_data}train/benign"
     folder_malignant_train = f"{path_raw_data}train/malignant"
@@ -32,8 +49,8 @@ def data_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_
     @timeit
     def _load_and_convert_images(folder_path: str) -> np.array:
         ims = [
-            read_image_from_s3(s3_bucket=aws_bucket, imname=filename)
-            for filename in tqdm(list_files_in_bucket(folder_path)[-10:])
+            aws_session.read_image_from_s3(s3_bucket=aws_bucket, imname=filename)
+            for filename in tqdm(aws_session.list_files_in_bucket(folder_path)[-10:])
         ]
         return np.array(ims, dtype="uint8")
 
@@ -88,31 +105,48 @@ def data_preprocessing(mlflow_tracking_uri: str, mlflow_experiment_id: str, aws_
         X_test = X_test / 255.0
 
         print("\n> Upload numpy arrays to S3...")
-        upload_npy_to_s3(
+        aws_session.upload_npy_to_s3(
             data=X_train,
             s3_bucket=aws_bucket,
             file_key=f"{path_preprocessed}/X_train.pkl",
         )
-        upload_npy_to_s3(
+        aws_session.upload_npy_to_s3(
             data=y_train,
             s3_bucket=aws_bucket,
             file_key=f"{path_preprocessed}/y_train.pkl",
         )
-        upload_npy_to_s3(
+        aws_session.upload_npy_to_s3(
             data=X_test,
             s3_bucket=aws_bucket,
             file_key=f"{path_preprocessed}/X_test.pkl",
         )
-        upload_npy_to_s3(
+        aws_session.upload_npy_to_s3(
             data=y_test,
             s3_bucket=aws_bucket,
             file_key=f"{path_preprocessed}/y_test.pkl",
         )
 
-        ti.xcom_push(key="X_train_data_path", value=f"{path_preprocessed}/X_train.pkl")
-        ti.xcom_push(key="y_train_data_path", value=f"{path_preprocessed}/y_train.pkl")
-        ti.xcom_push(key="X_test_data_path", value=f"{path_preprocessed}/X_test.pkl")
-        ti.xcom_push(key="y_test_data_path", value=f"{path_preprocessed}/y_test.pkl")
+    # Create dictionary with S3 paths to return
+    # return_dict = {
+    #     "X_train_data_path": f"{path_preprocessed}/X_train.pkl",
+    #     "y_train_data_path": f"{path_preprocessed}/y_train.pkl",
+    #     "X_test_data_path": f"{path_preprocessed}/X_test.pkl",
+    #     "y_test_data_path": f"{path_preprocessed}/y_test.pkl",
+    # }
+    # return json.dumps(return_dict)
+
+    X_train_data_path = f"{path_preprocessed}/X_train.pkl"
+    y_train_data_path = f"{path_preprocessed}/y_train.pkl"
+    X_test_data_path = f"{path_preprocessed}/X_test.pkl"
+    y_test_data_path = f"{path_preprocessed}/y_test.pkl"
+
+    return X_train_data_path, y_train_data_path, X_test_data_path, y_test_data_path
+
+    # return "hello"
+    # ti.xcom_push(key="X_train_data_path", value=f"{path_preprocessed}/X_train.pkl")
+    # ti.xcom_push(key="y_train_data_path", value=f"{path_preprocessed}/y_train.pkl")
+    # ti.xcom_push(key="X_test_data_path", value=f"{path_preprocessed}/X_test.pkl")
+    # ti.xcom_push(key="y_test_data_path", value=f"{path_preprocessed}/y_test.pkl")
 
 
 if __name__ == "__main__":
