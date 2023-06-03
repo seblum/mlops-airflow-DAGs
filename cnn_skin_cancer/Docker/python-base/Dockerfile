@@ -12,4 +12,4 @@ RUN pip3 install --upgrade -r requirements.txt
 COPY $app_directory/preprocessing.py /app
 COPY $app_directory/utils.py /app
 
-ENTRYPOINT ["python3"]
+CMD ["python3"]
