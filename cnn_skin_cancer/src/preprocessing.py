@@ -34,7 +34,8 @@ def data_preprocessing(
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
         aws_role_name=AWS_ROLE_NAME,
-    ).set_sessions()
+    )
+    aws_session.set_sessions()
 
     # Set paths within s3
     path_raw_data = f"s3://{aws_bucket}/data/"
