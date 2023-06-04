@@ -18,14 +18,13 @@ from utils import AWSSession
 
 
 def train_model(
-    mlflow_tracking_uri: str,
     mlflow_experiment_id: str,
     model_class: Enum,
     model_params: dict,
     aws_bucket: str,
     import_dict: dict = {},
-    **kwargs,
 ):
+    mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
     print("\n> Loading data...")
@@ -100,7 +99,6 @@ def train_model(
 
 
 if __name__ == "__main__":
-    mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
     mlflow_experiment_id = os.getenv("MLFLOW_EXPERIMENT_ID")
     aws_bucket = os.getenv("AWS_BUCKET")
     model_class = os.getenv("MODEL_CLASS")
@@ -124,7 +122,6 @@ if __name__ == "__main__":
     }
 
     train_model(
-        mlflow_tracking_uri=mlflow_tracking_uri,
         mlflow_experiment_id=mlflow_experiment_id,
         model_class=Model_Class[model_class],
         model_params=model_params,

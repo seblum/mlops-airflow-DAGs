@@ -4,12 +4,12 @@ from pprint import pprint
 import mlflow
 
 
-def compare_models(mlflow_tracking_uri: str, input_dict: dict, **kwargs) -> None:
+def compare_models(input_dict: dict) -> None:
+    mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
     client = mlflow.MlflowClient(tracking_uri=mlflow_tracking_uri)
 
-    # TODO: Loop over input dict, save all parameters in tmp dict, return max model
     all_results = {}
     for key, value in input_dict.items():
         # extract params/metrics data for run `test_run_id` in a single dict
@@ -34,6 +34,5 @@ def compare_models(mlflow_tracking_uri: str, input_dict: dict, **kwargs) -> None
 
 
 if __name__ == "__main__":
-    mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
-
-    compare_models(mlflow_tracking_uri=mlflow_tracking_uri)
+    input_dict = {}
+    compare_models(input_dict=input_dict)

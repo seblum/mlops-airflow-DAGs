@@ -14,12 +14,11 @@ from utils import AWSSession, timeit
 
 @timeit
 def data_preprocessing(
-    mlflow_tracking_uri: str,
     mlflow_experiment_id: str,
     aws_bucket: str,
     path_preprocessed: str = "preprocessed",
-    **kwargs,
 ) -> json:
+    mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
     # need to check that I instatiate this within airflow dags with correct access key
@@ -125,12 +124,10 @@ def data_preprocessing(
 
 
 if __name__ == "__main__":
-    mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
     mlflow_experiment_id = os.getenv("MLFLOW_EXPERIMENT_ID")
     aws_bucket = os.getenv("AWS_BUCKET")
 
     data_preprocessing(
-        mlflow_tracking_uri=mlflow_tracking_uri,
         mlflow_experiment_id=mlflow_experiment_id,
         aws_bucket=aws_bucket,
     )
