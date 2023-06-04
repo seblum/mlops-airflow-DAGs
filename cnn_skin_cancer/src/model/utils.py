@@ -20,7 +20,7 @@ def get_model(model_name: str, model_params: dict) -> Model:
     # TODO update python version
     print(f"name: {model_name}")
     match model_name:
-        case Model_Class.Basic:
+        case Model_Class.Basic.value:
             print("I am here")
             model = BasicNet(model_params)
             print(model)
@@ -34,9 +34,9 @@ def get_model(model_name: str, model_params: dict) -> Model:
             print(model.build_graph(model_params).summary())
             return model
 
-        case Model_Class.CrossVal:
+        case Model_Class.CrossVal.value:
             pass
-        case Model_Class.ResNet50:
+        case Model_Class.ResNet50.value:
             model = ResNet50(model_params).call()
             model.compile(
                 optimizer=model_params.get("optimizer"),
