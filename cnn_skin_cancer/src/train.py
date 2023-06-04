@@ -10,11 +10,17 @@ from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau
 
 # from keras.optimizers import Adam, RMSprop
-from model.utils import Model_Class, get_model
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 from tensorflow.keras.applications.resnet50 import ResNet50
-from utils import AWSSession
+
+from cnn_skin_cancer.src.model.utils import Model_Class, get_model
+
+# for Docker
+# from model.utils import Model_Class, get_model
+# from utils import AWSSession
+# for Airflow
+from cnn_skin_cancer.src.utils import AWSSession
 
 
 def train_model(

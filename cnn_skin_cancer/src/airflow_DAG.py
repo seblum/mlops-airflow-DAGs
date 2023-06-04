@@ -1,21 +1,9 @@
-import json
-
-# actually not needed anymore since there is the docker operator now
 import os
-from datetime import datetime
+from enum import Enum
 
 import mlflow
-import numpy as np
 import pendulum
 from airflow.decorators import dag, task
-from keras.utils.np_utils import (  # used for converting labels to one-hot-encoding
-    to_categorical,
-)
-from sklearn.utils import shuffle
-from tqdm import tqdm
-
-# from .model.utils import Model_Class
-from cnn_skin_cancer.src.model.utils import Model_Class
 
 # SET MLFLOW
 
@@ -37,8 +25,6 @@ except:
     pass
 # Setting the environment with the created experiment
 mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
-
-from enum import Enum
 
 
 class Model_Class(Enum):
@@ -195,7 +181,7 @@ def tutorial_taskflow_api():
         environment=kwargs_data_preprocessing,
         force_pull=True,
     )
-    def serve_fastapi_app_op(**kwargs):
+    def serve_fastapi_app_op(compare_models_dict):
         return True
 
     @task.docker(
@@ -203,7 +189,7 @@ def tutorial_taskflow_api():
         multiple_outputs=True,
         environment=kwargs_data_preprocessing,
     )
-    def serve_streamlit_app_op(**kwargs):
+    def serve_streamlit_app_op(compare_models_dict):
         return True
 
     # CREATE PIPELINE

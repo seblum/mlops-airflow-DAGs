@@ -9,7 +9,11 @@ from keras.utils.np_utils import (  # used for converting labels to one-hot-enco
 )
 from sklearn.utils import shuffle
 from tqdm import tqdm
-from utils import AWSSession, timeit
+
+# for Docker
+# from utils import AWSSession, timeit
+# for Airflow
+from cnn_skin_cancer.src.utils import AWSSession, timeit
 
 
 @timeit
