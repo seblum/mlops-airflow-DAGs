@@ -70,6 +70,7 @@ def train_model(
 
     print("\n> Training model...")
     run_name = model_class
+    print(run_name)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=f"{timestamp}-{run_name}") as run:
         mlflow.log_params(model_params)
@@ -94,6 +95,7 @@ def train_model(
                 K.clear_session()
         else:
             model = get_model(model_class, model_params)
+            print(model)
             mlflow.keras.autolog()
             model.fit(
                 X_train,
