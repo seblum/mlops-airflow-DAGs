@@ -1,4 +1,7 @@
 import json
+
+# actually not needed anymore since there is the docker operator now
+import os
 from datetime import datetime
 
 import mlflow
@@ -14,19 +17,16 @@ from tqdm import tqdm
 # from .model.utils import Model_Class
 from cnn_skin_cancer.src.model.utils import Model_Class
 
-# actually not needed anymore since there is the docker operator now
-
-
 # SET MLFLOW
 
 MLFLOW_TRACKING_URI_local = "http://127.0.0.1:5008/"
 MLFLOW_TRACKING_URI = "http://host.docker.internal:5008"
 EXPERIMENT_NAME = "cnn_skin_cancer"
-AWS_BUCKET = "testskincancer"
-AWS_REGION = "eu-central-1"
-AWS_ACCESS_KEY_ID = "AKIA4OKBSADP4YXK7VFA"
-AWS_SECRET_ACCESS_KEY = "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"
-AWS_ROLE_NAME = "testskincancer-role"
+AWS_BUCKET = os.getenv("AWS_BUCKET")
+AWS_REGION = os.getenv("AWS_REGION")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_local)
 
