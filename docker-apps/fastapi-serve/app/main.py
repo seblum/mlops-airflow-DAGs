@@ -39,7 +39,6 @@ async def service_health():
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-
     # TODO: insert types
     def _read_imagefile(data) -> Image.Image:
         image = Image.open(BytesIO(data))

@@ -19,7 +19,6 @@ FASTAPI_ENDPOINT = f"http://{FASTAPI_SERVING_IP}:{FASTAPI_SERVING_PORT}/predict"
 test_image = st.file_uploader("", type=["jpg"], accept_multiple_files=False)
 
 if test_image:
-
     image = Image.open(test_image)
     image_file = io.BytesIO(test_image.getvalue())
     files = {"file": image_file}
