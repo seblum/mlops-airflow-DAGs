@@ -69,7 +69,7 @@ def train_model(
     y_test = aws_session.download_npy_from_s3(s3_bucket=aws_bucket, file_key=y_test_data_path)
 
     print("\n> Training model...")
-    run_name = model_class.value
+    run_name = model_class
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=f"{timestamp}-{run_name}") as run:
         mlflow.log_params(model_params)
