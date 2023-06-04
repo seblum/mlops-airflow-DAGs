@@ -22,19 +22,8 @@ def data_preprocessing(
 ) -> json:
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
-    # read_image = lambda imname: np.asarray(Image.open(imname).convert("RGB"))
-    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-    AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
-    AWS_REGION = os.getenv("AWS_REGION")
-
     # need to check that I instatiate this within airflow dags with correct access key
-    aws_session = AWSSession(
-        region_name=AWS_REGION,
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        aws_role_name=AWS_ROLE_NAME,
-    )
+    aws_session = AWSSession()
     aws_session.set_sessions()
 
     # Set paths within s3
@@ -127,27 +116,12 @@ def data_preprocessing(
             file_key=f"{path_preprocessed}/y_test.pkl",
         )
 
-    # Create dictionary with S3 paths to return
-    # return_dict = {
-    #     "X_train_data_path": f"{path_preprocessed}/X_train.pkl",
-    #     "y_train_data_path": f"{path_preprocessed}/y_train.pkl",
-    #     "X_test_data_path": f"{path_preprocessed}/X_test.pkl",
-    #     "y_test_data_path": f"{path_preprocessed}/y_test.pkl",
-    # }
-    # return json.dumps(return_dict)
-
     X_train_data_path = f"{path_preprocessed}/X_train.pkl"
     y_train_data_path = f"{path_preprocessed}/y_train.pkl"
     X_test_data_path = f"{path_preprocessed}/X_test.pkl"
     y_test_data_path = f"{path_preprocessed}/y_test.pkl"
 
     return X_train_data_path, y_train_data_path, X_test_data_path, y_test_data_path
-
-    # return "hello"
-    # ti.xcom_push(key="X_train_data_path", value=f"{path_preprocessed}/X_train.pkl")
-    # ti.xcom_push(key="y_train_data_path", value=f"{path_preprocessed}/y_train.pkl")
-    # ti.xcom_push(key="X_test_data_path", value=f"{path_preprocessed}/X_test.pkl")
-    # ti.xcom_push(key="y_test_data_path", value=f"{path_preprocessed}/y_test.pkl")
 
 
 if __name__ == "__main__":
