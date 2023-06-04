@@ -10,12 +10,6 @@ import s3fs
 from boto3.session import Session
 from PIL import Image
 
-# # read_image = lambda imname: np.asarray(Image.open(imname).convert("RGB"))
-# AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-# AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-# AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
-# AWS_REGION = os.getenv("AWS_REGION")
-
 
 def timeit(func) -> Callable[..., Any]:
     @wraps(func)
@@ -31,17 +25,11 @@ def timeit(func) -> Callable[..., Any]:
 
 
 class AWSSession:
-    def __init__(
-        self,
-        region_name: str,
-        aws_access_key_id: str,
-        aws_secret_access_key: str,
-        aws_role_name: str,
-    ):
-        self.__region_name = region_name
-        self.__aws_access_key_id = aws_access_key_id
-        self.__aws_secret_access_key = aws_secret_access_key
-        self.__aws_role_name = aws_role_name
+    def __init__(self):
+        self.__region_name = os.getenv("AWS_REGION")
+        self.__aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+        self.__aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        self.__aws_role_name = os.getenv("AWS_ROLE_NAME")
 
         self.__boto3_role_session = None
         self.__s3fs_session = None

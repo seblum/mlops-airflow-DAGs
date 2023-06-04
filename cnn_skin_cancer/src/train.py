@@ -28,39 +28,14 @@ def train_model(
 ):
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
-    # ti = kwargs["ti"]
     print("\n> Loading data...")
-
     X_train_data_path = import_dict.get("X_train_data_path")
     y_train_data_path = import_dict.get("y_train_data_path")
     X_test_data_path = import_dict.get("X_test_data_path")
     y_test_data_path = import_dict.get("y_test_data_path")
-    print(y_train_data_path)
-    # # X_train_data_path = ti.xcom_pull(key="X_train_data_path", task_ids="run_preprocessing")
-    # # y_train_data_path = ti.xcom_pull(key="y_train_data_path", task_ids="run_preprocessing")
-    # # X_test_data_path = ti.xcom_pull(key="X_test_data_path", task_ids="run_preprocessing")
-    # # y_test_data_path = ti.xcom_pull(key="y_test_data_path", task_ids="run_preprocessing")
-
-    # # for local testing
-    # path_preprocessed = "preprocessed"
-    # X_train_data_path = f"{path_preprocessed}/X_train.pkl"
-    # y_train_data_path = f"{path_preprocessed}/y_train.pkl"
-    # X_test_data_path = f"{path_preprocessed}/X_test.pkl"
-    # y_test_data_path = f"{path_preprocessed}/y_test.pkl"
-
-    # read_image = lambda imname: np.asarray(Image.open(imname).convert("RGB"))
-    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-    AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
-    AWS_REGION = os.getenv("AWS_REGION")
 
     # need to check that I instatiate this within airflow dags with correct access key
-    aws_session = AWSSession(
-        region_name=AWS_REGION,
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        aws_role_name=AWS_ROLE_NAME,
-    )
+    aws_session = AWSSession()
     aws_session.set_sessions()
 
     X_train = aws_session.download_npy_from_s3(s3_bucket=aws_bucket, file_key=X_train_data_path)
@@ -76,11 +51,11 @@ def train_model(
         mlflow.log_params(model_params)
         learning_rate_reduction = ReduceLROnPlateau(monitor="accuracy", patience=5, verbose=1, factor=0.5, min_lr=1e-7)
 
-        if model_class == Model_Class.CrossVal:
+        if model_class == Model_Class.CrossVal.value:
             kfold = KFold(n_splits=3, shuffle=True, random_state=11)
             cvscores = []
             for train, test in kfold.split(X_train, y_train):
-                model = get_model(Model_Class.Basic, model_params)
+                model = get_model(Model_Class.Basic.value, model_params)
                 # TODO: autolog kfold ???
                 model.fit(
                     X_train[train],
@@ -118,29 +93,10 @@ def train_model(
         mlflow.log_metric("prediction_accuracy", prediction_accuracy)
         print(f"Prediction Accuracy: {prediction_accuracy}")
 
-        # mlflow.keras.log_model(model, artifact_path=run_name)
-
         print("\n> Register model")
         mv = mlflow.register_model(model_uri, run_name)
-        print(f"Name: {mv.name}")
-        print(f"Version: {mv.version}")
-        print(f"Stage: {mv.current_stage}")
 
-    # # Create dictionary with S3 paths to return
-    # return_dict = {
-    #     f"run_id-{run_name}": run_id,
-    #     f"model_version-{run_name}": mv.version
-    # }
-    # return json.dumps(return_dict)
-
-    # Create dictionary with S3 paths to return
-
-    return run_id, mv.version, mv.name, mv.current_stage
-
-    # print(f"run_id-{run_name}" run_id)
-    # print(f"model_version-{run_name}" mv.version)
-    # kwargs["ti"].xcom_push(key=f"run_id-{run_name}", value=run_id)
-    # kwargs["ti"].xcom_push(key=f"model_version-{run_name}", value=mv.version)
+    return run_id, mv.name, mv.version, mv.current_stage
 
 
 if __name__ == "__main__":
