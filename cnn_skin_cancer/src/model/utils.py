@@ -18,9 +18,12 @@ class Model_Class(Enum):
 
 def get_model(model_name: str, model_params: dict) -> Model:
     # TODO update python version
+    print(f"name: {model_name}")
     match model_name:
         case Model_Class.Basic:
+            print("I am here")
             model = BasicNet(model_params)
+            print(model)
             # print(model.summary(expand_nested=True))
             model.compile(
                 optimizer=model_params.get("optimizer"),
