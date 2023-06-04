@@ -11,9 +11,10 @@ from sklearn.utils import shuffle
 from tqdm import tqdm
 
 # for Docker
-# from utils import AWSSession, timeit
+from utils import AWSSession, timeit
+
 # for Airflow
-from cnn_skin_cancer.src.utils import AWSSession, timeit
+# from cnn_skin_cancer.src.utils import AWSSession, timeit
 
 
 @timeit

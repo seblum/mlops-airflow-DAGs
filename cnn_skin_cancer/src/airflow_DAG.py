@@ -54,8 +54,8 @@ kwargs_data_preprocessing = {
     "AWS_ACCESS_KEY_ID": AWS_ACCESS_KEY_ID,
     "AWS_SECRET_ACCESS_KEY": AWS_SECRET_ACCESS_KEY,
     "AWS_BUCKET": AWS_BUCKET,
-    "AWS_ROLE_NAME": AWS_ROLE_NAME,
     "AWS_REGION": AWS_REGION,
+    "AWS_ROLE_NAME": AWS_ROLE_NAME,
 }
 
 model_params = {
