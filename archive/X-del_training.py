@@ -111,7 +111,14 @@ X_test = X_test / 255.0
 # See learning curve and validation curve
 
 
-def cnn(input_shape=(224, 224, 3), lr=1e-3, num_classes=2, init="normal", activ="relu", optim="adam"):
+def cnn(
+    input_shape=(224, 224, 3),
+    lr=1e-3,
+    num_classes=2,
+    init="normal",
+    activ="relu",
+    optim="adam",
+):
     model = Sequential()
     model.add(
         Conv2D(
@@ -126,7 +133,15 @@ def cnn(input_shape=(224, 224, 3), lr=1e-3, num_classes=2, init="normal", activ=
     model.add(MaxPool2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
 
-    model.add(Conv2D(64, kernel_size=(3, 3), padding="Same", activation=activ, kernel_initializer="glorot_uniform"))
+    model.add(
+        Conv2D(
+            64,
+            kernel_size=(3, 3),
+            padding="Same",
+            activation=activ,
+            kernel_initializer="glorot_uniform",
+        )
+    )
     model.add(MaxPool2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
 

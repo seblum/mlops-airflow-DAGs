@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import mlflow
 import mlflow.keras
 import numpy as np
