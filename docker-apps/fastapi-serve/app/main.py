@@ -12,12 +12,6 @@ from fastapi.responses import JSONResponse
 from PIL import Image
 from tensorflow import keras
 
-# Get environment variables
-MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
-MLFLOW_MODEL_NAME = os.getenv("MLFLOW_MODEL_NAME")
-MLFLOW_MODEL_VERSION = os.getenv("MLFLOW_MODEL_VERSION")
-
-
 # Create FastAPI instance
 app = FastAPI()
 
@@ -39,6 +33,11 @@ async def service_health():
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
+    # Get environment variables
+    MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
+    MLFLOW_MODEL_NAME = os.getenv("MLFLOW_MODEL_NAME")
+    MLFLOW_MODEL_VERSION = os.getenv("MLFLOW_MODEL_VERSION")
+
     # TODO: insert types
     def _read_imagefile(data) -> Image.Image:
         image = Image.open(BytesIO(data))
