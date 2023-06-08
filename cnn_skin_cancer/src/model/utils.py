@@ -3,8 +3,8 @@ from enum import Enum
 from keras.models import Model
 
 # for Docker
-from model.basic_model import BasicNet
-from model.resnet50_model import ResNet50
+from src.model.basic_model import BasicNet
+from src.model.resnet50_model import ResNet50
 
 # for Airflow
 # from cnn_skin_cancer.src.model.basic_model import BasicNet

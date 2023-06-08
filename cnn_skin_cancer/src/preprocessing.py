@@ -8,10 +8,10 @@ from keras.utils.np_utils import (  # used for converting labels to one-hot-enco
     to_categorical,
 )
 from sklearn.utils import shuffle
-from tqdm import tqdm
 
 # for Docker
-from utils import AWSSession, timeit
+from src.utils import AWSSession, timeit
+from tqdm import tqdm
 
 # for Airflow
 # from cnn_skin_cancer.src.utils import AWSSession, timeit
