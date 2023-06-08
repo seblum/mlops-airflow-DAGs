@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "sc_cnn"
+version = "0.1.0"
+description = ""
+authors = ["Sebastian Blum <sebastian.blum@alexanderthamm.com>"]
+readme = "README.md"
+packages = [{include = "src/*"}]
+
+[tool.poetry.dependencies]
+python = "~3.11.3"
+tqdm = "^4.65.0"
+mlflow = "^2.4.0"
+pandas = "^2.0.2"
+tensorflow-io-gcs-filesystem = "0.32.0"
+tensorflow = "2.12.0"
+boto3 = "^1.26.27"
+s3fs = "2023.5.0"
+numpy = "1.23.5"
+keras = "2.12.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -44,6 +44,7 @@ def data_preprocessing(
     def _load_and_convert_images(folder_path: str) -> np.array:
         ims = [
             aws_session.read_image_from_s3(s3_bucket=aws_bucket, imname=filename)
+            # TODO: currently only uses the last ten files for testing
             for filename in tqdm(aws_session.list_files_in_bucket(folder_path)[-10:])
         ]
         return np.array(ims, dtype="uint8")
