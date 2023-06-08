@@ -19,4 +19,4 @@ COPY $app_directory/src /app/src
 RUN poetry install --only-root
 
 
-ENTRYPOINT ["python3"]
+CMD ["python3"]
