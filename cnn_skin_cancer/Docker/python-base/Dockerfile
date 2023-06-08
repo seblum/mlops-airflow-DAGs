@@ -12,8 +12,8 @@ RUN pip3 install --upgrade -r requirements.txt
 RUN pip3 install poetry && poetry config virtualenvs.create false
 
 COPY $app_directory/pyproject.toml $app_directory/poetry.lock ./
-RUN poetry install --only main --no-root --no-interaction && \
-    poetry cache clear pypi --all
+RUN poetry install --no-root --no-interaction
+# && poetry cache clear pypi --all
 
 COPY $app_directory/src /app/src
 RUN poetry install --only-root
