@@ -1,9 +1,9 @@
 [tool.poetry]
-name = "sc_cnn"
+name = "skcacnn"
 version = "0.1.0"
 description = ""
 authors = ["Sebastian Blum <sebastian.blum@alexanderthamm.com>"]
-readme = "README.md"
+readme = "readme.md"
 packages = [{include = "src/*"}]
 
 [tool.poetry.dependencies]
