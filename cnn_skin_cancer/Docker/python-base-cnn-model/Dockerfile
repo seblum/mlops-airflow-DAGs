@@ -1,6 +1,6 @@
 FROM python:3.11.3-slim-buster
 
-ARG docker_directory=./cnn_skin_cancer/Docker/python-base
+ARG docker_directory=./cnn_skin_cancer/Docker/python-base-cnn-model
 ARG app_directory=./cnn_skin_cancer
 
 COPY $docker_directory/requirements.txt /app/requirements.txt
