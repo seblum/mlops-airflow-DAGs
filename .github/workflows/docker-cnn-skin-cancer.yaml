@@ -1,9 +1,9 @@
-name: Docker CI python-base
+name: Docker CI cnn-skin-cancer
 
 env:
   PREFIX: cnn_skin_cancer/Docker
   DIRECTORY: python-base
-  DOCKERREPO: seblum/cnn-model
+  DOCKERREPO: seblum/cnn-skin-cancer
 
 on:
   push:
@@ -34,4 +34,5 @@ jobs:
         with:
           file: ./${{ env.PREFIX }}/${{ env.DIRECTORY }}/Dockerfile
           push: true
-          tags: ${{ env.DOCKERREPO }}:${{ env.DIRECTORY }}
+          # could use poetry version instead of latest
+          tags: ${{ env.DOCKERREPO }}:latest
