@@ -2,25 +2,17 @@ import json
 import os
 from datetime import datetime
 from enum import Enum
+from typing import Tuple
 
 import mlflow
 import mlflow.keras
 import numpy as np
 from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau
-
-# from keras.optimizers import Adam, RMSprop
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
-
-# for Docker
 from src.model.utils import Model_Class, get_model
 from src.utils import AWSSession
-from tensorflow.keras.applications.resnet50 import ResNet50
-
-# for Airflow
-# from cnn_skin_cancer.src.utils import AWSSession
-# from cnn_skin_cancer.src.model.utils import Model_Class, get_model
 
 
 def train_model(
@@ -29,7 +21,7 @@ def train_model(
     model_params: dict,
     aws_bucket: str,
     import_dict: dict = {},
-):
+) -> Tuple[str, str, int, str]:
     mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 

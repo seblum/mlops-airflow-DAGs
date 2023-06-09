@@ -1,6 +1,5 @@
 import tensorflow.keras.applications.resnet50 as rs50
 from keras.models import Model
-from keras.optimizers import Adam
 
 
 class ResNet50:

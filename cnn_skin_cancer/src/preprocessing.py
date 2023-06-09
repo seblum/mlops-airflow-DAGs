@@ -1,20 +1,14 @@
 import json
 import os
 from datetime import datetime
+from typing import Tuple
 
 import mlflow
 import numpy as np
-from keras.utils.np_utils import (  # used for converting labels to one-hot-encoding
-    to_categorical,
-)
+from keras.utils.np_utils import to_categorical
 from sklearn.utils import shuffle
-
-# for Docker
 from src.utils import AWSSession, timeit
 from tqdm import tqdm
-
-# for Airflow
-# from cnn_skin_cancer.src.utils import AWSSession, timeit
 
 
 @timeit
@@ -22,11 +16,12 @@ def data_preprocessing(
     mlflow_experiment_id: str,
     aws_bucket: str,
     path_preprocessed: str = "preprocessed",
-) -> json:
+) -> Tuple[str, str, str, str]:
     mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
-    # need to check that I instatiate this within airflow dags with correct access key
+    # instantiate aws session based on keys
+    # key fetched within AWS Session from os.getenv
     aws_session = AWSSession()
     aws_session.set_sessions()
 

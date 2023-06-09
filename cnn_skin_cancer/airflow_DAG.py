@@ -48,7 +48,7 @@ dag_default_args = {
 
 ## PREPROCESSING
 
-kwargs_data_preprocessing = {
+kwargs_env_data = {
     "MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI,
     "MLFLOW_EXPERIMENT_ID": mlflow_experiment_id,
     "AWS_ACCESS_KEY_ID": AWS_ACCESS_KEY_ID,
@@ -75,36 +75,37 @@ model_params = {
     "verbose": 2,
 }
 
+skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
+
 
 @dag(
-    "cnn_skin_cancer_taskflow",
+    "cnn_skin_cancer_workflow",
     default_args=dag_default_args,
     schedule_interval=None,
     max_active_runs=1,
 )
-def tutorial_taskflow_api():
+def cnn_skin_cancer_workflow():
     @task.docker(
-        image="seblum/cnn-model:python-base",
+        image=skin_cancer_container_image,
         multiple_outputs=True,
-        environment=kwargs_data_preprocessing,
+        environment=kwargs_env_data,
         working_dir="/app",
         force_pull=True,
-        # tmp_dir="/app"
+        network_mode="bridge",
     )
-    def preprocessing_op(mlflow_experiment_id, AWS_BUCKET):
+    def preprocessing_op(mlflow_experiment_id):
         import os
-        import sys
 
-        sys.path.append(os.path.abspath("/app/"))
+        from src.preprocessing import data_preprocessing
 
-        from preprocessing import data_preprocessing
+        aws_bucket = os.getenv("AWS_BUCKET")
 
         (
             X_train_data_path,
             y_train_data_path,
             X_test_data_path,
             y_test_data_path,
-        ) = data_preprocessing(mlflow_experiment_id=mlflow_experiment_id, aws_bucket=AWS_BUCKET)
+        ) = data_preprocessing(mlflow_experiment_id=mlflow_experiment_id, aws_bucket=aws_bucket)
 
         # Create dictionary with S3 paths to return
         return_dict = {
@@ -116,29 +117,28 @@ def tutorial_taskflow_api():
         return return_dict
 
     @task.docker(
-        image="seblum/cnn-model:python-base",
+        image=skin_cancer_container_image,
         multiple_outputs=True,
-        environment=kwargs_data_preprocessing,
+        environment=kwargs_env_data,
         working_dir="/app",
         force_pull=True,
+        network_mode="bridge",
     )
-    def model_training_op(mlflow_experiment_id, model_class, model_params, AWS_BUCKET, input):
+    def model_training_op(mlflow_experiment_id, model_class, model_params, input):
+
         import os
-        import sys
 
-        sys.path.append(os.path.abspath("/app/"))
+        from src.train import train_model
 
-        from train import train_model
-
+        aws_bucket = os.getenv("AWS_BUCKET")
         run_id, model_name, model_version, model_stage = train_model(
             mlflow_experiment_id=mlflow_experiment_id,
             model_class=model_class,
             model_params=model_params,
-            aws_bucket=AWS_BUCKET,
+            aws_bucket=aws_bucket,
             import_dict=input,
         )
 
-        # Create dictionary with S3 paths to return
         return_dict = {
             "run_id": run_id,
             "model_name": model_name,
@@ -148,24 +148,22 @@ def tutorial_taskflow_api():
         return return_dict
 
     @task.docker(
-        image="seblum/cnn-model:python-base",
+        image=skin_cancer_container_image,
         multiple_outputs=True,
-        environment=kwargs_data_preprocessing,
+        environment=kwargs_env_data,
         force_pull=True,
+        network_mode="bridge",
     )
-    def compare_models_op(train_data_basic, train_data_resnet50):
-        import os
-        import sys
-
-        sys.path.append(os.path.abspath("/app/"))
+    def compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval):
 
         compare_dict = {
             train_data_basic["model_name"]: train_data_basic["run_id"],
             train_data_resnet50["model_name"]: train_data_resnet50["run_id"],
+            train_data_crossval["model_name"]: train_data_crossval["run_id"],
         }
 
         print(compare_dict)
-        from compare_models import compare_models
+        from src.compare_models import compare_models
 
         serving_model_name, serving_model_uri, serving_model_version = compare_models(input_dict=compare_dict)
         return_dict = {
@@ -178,8 +176,9 @@ def tutorial_taskflow_api():
     @task.docker(
         image="seblum/model-serving:fastapi-serve",
         multiple_outputs=True,
-        environment=kwargs_data_preprocessing,
+        environment=kwargs_env_data,
         force_pull=True,
+        network_mode="bridge",
     )
     def serve_fastapi_app_op(compare_models_dict):
 
@@ -194,7 +193,8 @@ def tutorial_taskflow_api():
     @task.docker(
         image="seblum/model-serving:streamlit-inference",
         multiple_outputs=True,
-        environment=kwargs_data_preprocessing,
+        environment=kwargs_env_data,
+        network_mode="bridge",
     )
     def serve_streamlit_app_op(serve_fastapi_app_dict):
 
@@ -207,27 +207,30 @@ def tutorial_taskflow_api():
 
     # CREATE PIPELINE
 
-    data = preprocessing_op(
+    preprocessed_data = preprocessing_op(
         mlflow_experiment_id=mlflow_experiment_id,
-        AWS_BUCKET=AWS_BUCKET,
     )
     train_data_basic = model_training_op(
         mlflow_experiment_id=mlflow_experiment_id,
         model_class=Model_Class.Basic.name,
         model_params=model_params,
-        AWS_BUCKET=AWS_BUCKET,
-        input=data,
+        input=preprocessed_data,
     )
     train_data_resnet50 = model_training_op(
         mlflow_experiment_id=mlflow_experiment_id,
         model_class=Model_Class.ResNet50.name,
         model_params=model_params,
-        AWS_BUCKET=AWS_BUCKET,
-        input=data,
+        input=preprocessed_data,
     )
-    compare_models_dict = compare_models_op(train_data_basic, train_data_resnet50)
+    train_data_crossval = model_training_op(
+        mlflow_experiment_id=mlflow_experiment_id,
+        model_class=Model_Class.CrossVal.name,
+        model_params=model_params,
+        input=preprocessed_data,
+    )
+    compare_models_dict = compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval)
     serve_fastapi_app_dict = serve_fastapi_app_op(compare_models_dict)
     serve_streamlit_app_op(serve_fastapi_app_dict)
 
 
-tutorial_taskflow_api()
+cnn_skin_cancer_workflow()

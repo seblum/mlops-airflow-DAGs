@@ -1,6 +1,5 @@
 import tensorflow as tf
 from keras import layers
-from keras.callbacks import ReduceLROnPlateau
 from keras.models import Model
 from tensorflow import keras
 
