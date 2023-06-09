@@ -1,9 +1,26 @@
 import os
+from typing import Tuple
 
 import mlflow
 
 
-def compare_models(input_dict: dict) -> None:
+def compare_models(input_dict: dict, metric: str = "prediction_accuracy") -> Tuple[str, str, int]:
+    """
+    Compares a given set of MLflow models based on their logged metric. The model with the best metric will be
+    transferred to a "Staging" stage within the MLflow Registry.
+
+    Args:
+        input_dict (dict): A dictionary containing the names and run IDs of the MLflow models to compare.
+        metric (str, optional): The metric to compare the models. Defaults to "prediction_accuracy".
+
+    Returns:
+        Tuple[str, str, int]: A tuple containing the name of the best performing model, its MLflow URI,
+                              and the version of the model.
+
+    Raises:
+        None
+    """
+
     mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
@@ -14,7 +31,7 @@ def compare_models(input_dict: dict) -> None:
         # extract params/metrics data for run `test_run_id` in a single dict
         model_results_data_dict = client.get_run(value).data.to_dictionary()
         # get params and metrics for this run (test_run_id)
-        model_results_accuracy = model_results_data_dict["metrics"]["prediction_accuracy"]
+        model_results_accuracy = model_results_data_dict["metrics"][metric]
         all_results[key] = model_results_accuracy
 
     # Get model with maximum accuracy

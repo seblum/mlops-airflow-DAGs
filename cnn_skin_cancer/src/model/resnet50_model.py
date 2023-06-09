@@ -3,6 +3,20 @@ from keras.models import Model
 
 
 class ResNet50:
+    """ResNet50 is a wrapper class for the ResNet-50 model from Keras applications.
+
+    Args:
+        model_params (dict): A dictionary containing the model parameters.
+
+    Attributes:
+        model (keras.models.Model): The ResNet-50 model.
+
+    Methods:
+        call() -> keras.models.Model:
+            Returns the ResNet-50 model.
+
+    """
+
     def __init__(self, model_params: dict):
         self.model = rs50.ResNet50(
             include_top=True,
@@ -14,4 +28,10 @@ class ResNet50:
         )
 
     def call(self) -> Model:
+        """Returns the ResNet-50 model.
+
+        Returns:
+            keras.models.Model: The ResNet-50 model.
+
+        """
         return self.model

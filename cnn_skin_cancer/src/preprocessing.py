@@ -1,4 +1,3 @@
-import json
 import os
 from datetime import datetime
 from typing import Tuple
@@ -17,11 +16,21 @@ def data_preprocessing(
     aws_bucket: str,
     path_preprocessed: str = "preprocessed",
 ) -> Tuple[str, str, str, str]:
+    """Preprocesses data for further use within model training. Raw data is read from given S3 Bucket, normalized, and stored ad a NumPy Array within S3 again. Output directory is on "/preprocessed". The shape of the data set is logged to MLflow.
+
+    Args:
+        mlflow_experiment_id (str): Experiment ID of the MLflow run to log data
+        aws_bucket (str): S3 Bucket to read raw data from and write preprocessed data
+        path_preprocessed (str, optional): Subdirectory to store the preprocessed data on the provided S3 Bucket. Defaults to "preprocessed".
+
+    Returns:
+        Tuple[str, str, str, str]: Four strings denoting the path of the preprocessed data stored as NumPy Arrays: X_train_data_path, y_train_data_path, X_test_data_path, y_test_data_path
+    """
     mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
-    # instantiate aws session based on keys
-    # key fetched within AWS Session from os.getenv
+    # Instantiate aws session based on AWS Access Key
+    # AWS Access Key is fetched within AWS Session by os.getenv
     aws_session = AWSSession()
     aws_session.set_sessions()
 
@@ -34,9 +43,20 @@ def data_preprocessing(
     folder_benign_test = f"{path_raw_data}test/benign"
     folder_malignant_test = f"{path_raw_data}test/malignant"
 
-    # Define Processing methods
     @timeit
     def _load_and_convert_images(folder_path: str) -> np.array:
+        """
+        Loads and converts images from an S3 bucket folder into a NumPy array.
+
+        Args:
+            folder_path (str): The path to the S3 bucket folder.
+
+        Returns:
+            np.array: The NumPy array containing the converted images.
+
+        Raises:
+            None
+        """
         ims = [
             aws_session.read_image_from_s3(s3_bucket=aws_bucket, imname=filename)
             # TODO: currently only uses the last ten files for testing
@@ -45,9 +65,34 @@ def data_preprocessing(
         return np.array(ims, dtype="uint8")
 
     def _create_label(x_dataset: np.array) -> np.array:
+        """
+        Creates label array for the given dataset.
+
+        Args:
+            x_dataset (np.array): The dataset for which labels are to be created.
+
+        Returns:
+            np.array: The label array.
+
+        Raises:
+            None
+        """
         return np.zeros(x_dataset.shape[0])
 
     def _merge_data(set_one: np.array, set_two: np.array) -> np.array:
+        """
+        Merges two datasets into a single dataset.
+
+        Args:
+            set_one (np.array): The first dataset.
+            set_two (np.array): The second dataset.
+
+        Returns:
+            np.array: The merged dataset.
+
+        Raises:
+            None
+        """
         return np.concatenate((set_one, set_two), axis=0)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -61,8 +106,8 @@ def data_preprocessing(
         X_benign_test = _load_and_convert_images(folder_benign_test)
         X_malignant_test = _load_and_convert_images(folder_malignant_test)
 
-        print("\n> Log data parameters")
         # Log train-test size in MLflow
+        print("\n> Log data parameters")
         mlflow.log_param("train_size_benign", X_benign.shape[0])
         mlflow.log_param("train_size_malignant", X_malignant.shape[0])
         mlflow.log_param("test_size_benign", X_benign_test.shape[0])

@@ -22,6 +22,22 @@ def train_model(
     aws_bucket: str,
     import_dict: dict = {},
 ) -> Tuple[str, str, int, str]:
+    """
+    Trains a machine learning model and logs the results to MLflow.
+
+    Args:
+        mlflow_experiment_id (str): The ID of the MLflow experiment to log the results.
+        model_class (Enum): The class of the model to train.
+        model_params (dict): A dictionary containing the parameters for the model.
+        aws_bucket (str): The AWS S3 bucket name for data storage.
+        import_dict (dict, optional): A dictionary containing paths for importing data. Defaults to {}.
+
+    Returns:
+        Tuple[str, str, int, str]: A tuple containing the run ID, model name, model version, and current stage.
+
+    Raises:
+        None
+    """
     mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
@@ -31,29 +47,32 @@ def train_model(
     X_test_data_path = import_dict.get("X_test_data_path")
     y_test_data_path = import_dict.get("y_test_data_path")
 
-    # need to check that I instatiate this within airflow dags with correct access key
+    # Instantiate aws session based on AWS Access Key
+    # AWS Access Key is fetched within AWS Session by os.getenv
     aws_session = AWSSession()
     aws_session.set_sessions()
 
+    # Read NumPy Arrays from S3
     X_train = aws_session.download_npy_from_s3(s3_bucket=aws_bucket, file_key=X_train_data_path)
     y_train = aws_session.download_npy_from_s3(s3_bucket=aws_bucket, file_key=y_train_data_path)
     X_test = aws_session.download_npy_from_s3(s3_bucket=aws_bucket, file_key=X_test_data_path)
     y_test = aws_session.download_npy_from_s3(s3_bucket=aws_bucket, file_key=y_test_data_path)
 
     print("\n> Training model...")
-    run_name = model_class
-    print(run_name)
+    print(model_class)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=f"{timestamp}-{run_name}") as run:
+    with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=f"{timestamp}-{model_class}") as run:
         mlflow.log_params(model_params)
         learning_rate_reduction = ReduceLROnPlateau(monitor="accuracy", patience=5, verbose=1, factor=0.5, min_lr=1e-7)
 
+        # If CrossVal is selected, train BasicNet as Cross-Validated Model
         if model_class == Model_Class.CrossVal.value:
             kfold = KFold(n_splits=3, shuffle=True, random_state=11)
             cvscores = []
             for train, test in kfold.split(X_train, y_train):
                 model = get_model(Model_Class.Basic.value, model_params)
                 # TODO: autolog kfold ???
+                # Train Model
                 model.fit(
                     X_train[train],
                     y_train[train],
@@ -65,10 +84,11 @@ def train_model(
                 print("%s: %.2f%%" % (model.metrics_names[1], scores[1] * 100))
                 cvscores.append(scores[1] * 100)
                 K.clear_session()
+        # TODO: not very safe, create if-else on other Enums
         else:
             model = get_model(model_class, model_params)
-            print(model)
             mlflow.keras.autolog()
+            # Train Model
             model.fit(
                 X_train,
                 y_train,
@@ -81,7 +101,7 @@ def train_model(
             mlflow.keras.autolog(disable=True)
 
         run_id = run.info.run_id
-        model_uri = f"runs:/{run_id}/{run_name}"
+        model_uri = f"runs:/{run_id}/{model_class}"
 
         # Testing model on test data to evaluate
         print("\n> Testing model...")
@@ -90,8 +110,8 @@ def train_model(
         mlflow.log_metric("prediction_accuracy", prediction_accuracy)
         print(f"Prediction Accuracy: {prediction_accuracy}")
 
-        print("\n> Register model")
-        mv = mlflow.register_model(model_uri, run_name)
+        print("\n> Register model...")
+        mv = mlflow.register_model(model_uri, model_class)
 
     return run_id, mv.name, mv.version, mv.current_stage
 

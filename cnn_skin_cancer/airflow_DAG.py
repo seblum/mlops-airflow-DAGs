@@ -35,18 +35,14 @@ class Model_Class(Enum):
     ResNet50 = "ResNet50"
 
 
-# SET AIRFLOW
+# Set various model params and airflow or environment args
 
-# Set various params and args
 dag_default_args = {
     "owner": "seblum",
     "depends_on_past": False,
     "start_date": pendulum.datetime(2021, 1, 1, tz="UTC"),
-    # "provide_context": True,
     "tags": ["Keras CNN to classify skin cancer"],
 }
-
-## PREPROCESSING
 
 kwargs_env_data = {
     "MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI,
@@ -94,6 +90,15 @@ def cnn_skin_cancer_workflow():
         network_mode="bridge",
     )
     def preprocessing_op(mlflow_experiment_id):
+        """
+        Perform data preprocessing.
+
+        Args:
+            mlflow_experiment_id (str): The MLflow experiment ID.
+
+        Returns:
+            dict: A dictionary containing the paths to preprocessed data.
+        """
         import os
 
         from src.preprocessing import data_preprocessing
@@ -125,7 +130,18 @@ def cnn_skin_cancer_workflow():
         network_mode="bridge",
     )
     def model_training_op(mlflow_experiment_id, model_class, model_params, input):
+        """
+        Train a model.
 
+        Args:
+            mlflow_experiment_id (str): The MLflow experiment ID.
+            model_class (str): The class of the model to train.
+            model_params (dict): A dictionary containing the model parameters.
+            input (dict): A dictionary containing the input data.
+
+        Returns:
+            dict: A dictionary containing the results of the model training.
+        """
         import os
 
         from src.train import train_model
@@ -155,7 +171,17 @@ def cnn_skin_cancer_workflow():
         network_mode="bridge",
     )
     def compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval):
+        """
+        Compare trained models.
 
+        Args:
+            train_data_basic (dict): A dictionary containing the results of training the basic model.
+            train_data_resnet50 (dict): A dictionary containing the results of training the ResNet50 model.
+            train_data_crossval (dict): A dictionary containing the results of training the CrossVal model.
+
+        Returns:
+            dict: A dictionary containing the results of the model comparison.
+        """
         compare_dict = {
             train_data_basic["model_name"]: train_data_basic["run_id"],
             train_data_resnet50["model_name"]: train_data_resnet50["run_id"],
@@ -181,7 +207,15 @@ def cnn_skin_cancer_workflow():
         network_mode="bridge",
     )
     def serve_fastapi_app_op(compare_models_dict):
+        """
+        Serve the FastAPI application.
 
+        Args:
+            compare_models_dict (dict): A dictionary containing the results of the model comparison.
+
+        Returns:
+            dict: A dictionary containing the FastAPI serving details.
+        """
         import os
 
         os.environ["MLFLOW_MODEL_NAME"] = compare_models_dict["serving_model_name"]
@@ -197,7 +231,12 @@ def cnn_skin_cancer_workflow():
         network_mode="bridge",
     )
     def serve_streamlit_app_op(serve_fastapi_app_dict):
+        """
+        Serve the Streamlit application.
 
+        Args:
+            serve_fastapi_app_dict (dict): A dictionary containing the FastAPI serving details.
+        """
         import os
 
         os.environ["FASTAPI_SERVING_IP"] = serve_fastapi_app_dict["FASTAPI_SERVING_IP"]

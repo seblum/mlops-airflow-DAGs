@@ -14,7 +14,16 @@ class Model_Class(Enum):
 
 
 def get_model(model_name: str, model_params: dict) -> Model:
-    # TODO update python version
+    """Get the specified model based on the model name.
+
+    Args:
+        model_name (str): The name of the model to retrieve.
+        model_params (dict): A dictionary containing the model parameters.
+
+    Returns:
+        keras.models.Model: The specified model.
+
+    """
     print(f"name: {model_name}")
     match model_name:
         case Model_Class.Basic.value:
@@ -28,7 +37,7 @@ def get_model(model_name: str, model_params: dict) -> Model:
                 metrics=model_params.get("metrics"),
             )
             # TODO: doesnt need to print every time
-            print(model.build_graph(model_params).summary())
+            # print(model.build_graph(model_params).summary())
             return model
 
         case Model_Class.CrossVal.value:
@@ -42,3 +51,4 @@ def get_model(model_name: str, model_params: dict) -> Model:
             )
             print(model.summary(expand_nested=True))
             return model
+        # TODO: catch case_
