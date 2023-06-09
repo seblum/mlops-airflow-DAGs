@@ -1,8 +1,8 @@
 name: Docker CI streamlit
 
 env:
-  PREFIX: docker-apps
-  DIRECTORY: streamlit-inference
+  PREFIX: cnn_skin_cancer/Docker
+  DIRECTORY: streamlit-inference-app
   DOCKERREPO: seblum/model-serving
 
 on:
