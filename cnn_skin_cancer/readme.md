@@ -1,4 +1,4 @@
-# CNN Skin Cancer Classification with Airflow DAG and MLflow Integration
+# CNN Skin Cancer Classification with Airflow & MLflow Integration
 
 This repository showcases a use case for CNN skin cancer classification using a TensorFlow model. The project sets up an Airflow DAG pipeline with MLflow integration, providing a scalable and reproducible solution for classifying melanoma as benign or malignant.
 
