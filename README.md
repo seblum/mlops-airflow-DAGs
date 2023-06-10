@@ -1,4 +1,4 @@
-# Airflow DAGs for MLOps Bookdown Projekt *MLOps Engineering*
+# Airflow DAGs for Bookdown Project *MLOps Engineering*
 
 This repository contains a collection of Airflow DAGs for solving various ML problems. These DAGs are designed to provide a scalable and reliable pipeline for machine learning tasks, leveraging the power of Apache Airflow and integrating with MLflow.
 
