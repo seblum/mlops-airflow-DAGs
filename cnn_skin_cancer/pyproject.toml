@@ -3,7 +3,7 @@ name = "skcacnn"
 version = "0.1.0"
 description = ""
 authors = ["Sebastian Blum <sebastian.blum@alexanderthamm.com>"]
-readme = "readme.md"
+readme = "README.md"
 packages = [{include = "src/*"}]
 
 [tool.poetry.dependencies]
