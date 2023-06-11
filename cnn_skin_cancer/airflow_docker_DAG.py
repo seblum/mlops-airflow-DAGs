@@ -4,8 +4,8 @@ from enum import Enum
 import mlflow
 import pendulum
 from airflow.decorators import dag, task
-
-# SET MLFLOW
+from airflow.operators.bash import BashOperator
+from airflow.providers.docker.operators.docker import DockerOperator
 
 MLFLOW_TRACKING_URI_local = "http://127.0.0.1:5008/"
 MLFLOW_TRACKING_URI = "http://host.docker.internal:5008"
@@ -75,7 +75,7 @@ skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 
 
 @dag(
-    "cnn_skin_cancer_workflow",
+    "cnn_skin_cancer_docker_workflow",
     default_args=dag_default_args,
     schedule_interval=None,
     max_active_runs=1,
@@ -199,50 +199,15 @@ def cnn_skin_cancer_workflow():
         }
         return return_dict
 
-    @task.docker(
-        image="seblum/model-serving:fastapi-serve",
-        multiple_outputs=True,
-        environment=kwargs_env_data,
-        force_pull=True,
-        network_mode="bridge",
+    serve_fastapi_app_op = BashOperator(
+        task_id="fastapi-serve-app",
+        bash_command='docker run --detach -p 80:80 -it seblum/model-serving:fastapi-serve-app && echo "fastapi-serve running"',
     )
-    def serve_fastapi_app_op(compare_models_dict):
-        """
-        Serve the FastAPI application.
 
-        Args:
-            compare_models_dict (dict): A dictionary containing the results of the model comparison.
-
-        Returns:
-            dict: A dictionary containing the FastAPI serving details.
-        """
-        import os
-
-        os.environ["MLFLOW_MODEL_NAME"] = compare_models_dict["serving_model_name"]
-        os.environ["MLFLOW_MODEL_VERSION"] = compare_models_dict["serving_model_version"]
-
-        return_dict = {"FASTAPI_SERVING_IP": "http://host.docker.internal:5008", "FASTAPI_SERVING_PORT": 80}
-        return return_dict
-
-    @task.docker(
-        image="seblum/model-serving:streamlit-inference",
-        multiple_outputs=True,
-        environment=kwargs_env_data,
-        network_mode="bridge",
+    serve_streamlit_app_op = BashOperator(
+        task_id="streamlit-inference-app",
+        bash_command='docker run --detach -p 8501:8501 -it seblum/model-serving:streamlit-inference-app && echo "streamlit-inference running"',
     )
-    def serve_streamlit_app_op(serve_fastapi_app_dict):
-        """
-        Serve the Streamlit application.
-
-        Args:
-            serve_fastapi_app_dict (dict): A dictionary containing the FastAPI serving details.
-        """
-        import os
-
-        os.environ["FASTAPI_SERVING_IP"] = serve_fastapi_app_dict["FASTAPI_SERVING_IP"]
-        os.environ["FASTAPI_SERVING_PORT"] = serve_fastapi_app_dict["FASTAPI_SERVING_PORT"]
-
-        print("Service running")
 
     # CREATE PIPELINE
 
@@ -268,8 +233,8 @@ def cnn_skin_cancer_workflow():
         input=preprocessed_data,
     )
     compare_models_dict = compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval)
-    serve_fastapi_app_dict = serve_fastapi_app_op(compare_models_dict)
-    serve_streamlit_app_op(serve_fastapi_app_dict)
+
+    compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
 
 
 cnn_skin_cancer_workflow()
