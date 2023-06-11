@@ -26,16 +26,20 @@ if test_image:
     col1, col2 = st.columns(2)
 
     with col1:
+        # Display the uploaded image in the first column
         st.image(test_image, caption="", use_column_width="always")
 
     with col2:
         if st.button("Start Prediction"):
             with st.spinner("Prediction in Progress. Please Wait..."):
+                # Send a POST request to FastAPI for prediction
                 output = requests.post(FASTAPI_ENDPOINT, files=files, timeout=8000)
             st.success("Success! Click the Download button below to retrieve prediction results (JSON format)")
+            # Display the prediction results in JSON format
             st.json(output.json())
+            # Add a download button to download the prediction results as a JSON file
             st.download_button(
                 label="Download",
-                data=json.dumps(output.json()),  # Download as JSON file object
+                data=json.dumps(output.json()),
                 file_name="cnn_skin_cancer_prediction_results.json",
             )

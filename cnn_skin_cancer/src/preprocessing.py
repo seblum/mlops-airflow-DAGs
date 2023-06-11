@@ -95,6 +95,7 @@ def data_preprocessing(
         """
         return np.concatenate((set_one, set_two), axis=0)
 
+    # Start a MLflow run to log the size of the data
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     with mlflow.start_run(experiment_id=mlflow_experiment_id, run_name=f"{timestamp}_Preprocessing") as run:
         print("\n> Loading images from S3...")
