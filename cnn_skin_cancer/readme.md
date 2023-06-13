@@ -16,9 +16,12 @@ The `cnn_skin_cancer` use case focuses on training a Convolutional Neural Networ
 
 ### Pipeline Steps:
 
+![](images/use-case-pipeline-graph.png)
+
 1. Data Preprocessing: The pipeline performs data preprocessing tasks, including data cleaning, augmentation, and normalization, to prepare the skin cancer dataset for training.
 2. Model Training & Evaluation: The CNN model is trained on the preprocessed data using the code in the `src/` directory. The trained model is evaluated using various performance metrics to assess its effectiveness in classifying melanoma.
 3. Model Comparison: The pipeline compares different models based on their evaluation results to determine the best-performing model.
+4. Model Serving & Inferencing: The best-performing model is served via a FastAPI container and inferences can be sent via a streamlit application
 
 ## Contributing
 
