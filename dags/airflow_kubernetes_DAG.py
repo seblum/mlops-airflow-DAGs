@@ -8,8 +8,7 @@ from airflow.kubernetes.secret import Secret
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 
-# MLFLOW_TRACKING_URI_cluster = "http://mlflow.mlflow.svc.cluster.local:5000"
-MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local:5000"
+MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"
 EXPERIMENT_NAME = "cnn_skin_cancer"
 
 SECRET_AWS_BUCKET = Secret(
