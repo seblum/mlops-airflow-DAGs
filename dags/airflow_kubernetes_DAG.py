@@ -133,6 +133,7 @@ def cnn_skin_cancer_workflow():
         Returns:
             dict: A dictionary containing the paths to preprocessed data.
         """
+        import mlflow
 
         mlflow.set_tracking_uri("http://mlflow.mlflow.svc.cluster.local:5000")
 
