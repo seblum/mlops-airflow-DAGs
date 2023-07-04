@@ -6,7 +6,7 @@ import pendulum
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.kubernetes.secrets import Secret
+from airflow.kubernetes.secret import Secret
 
 MLFLOW_TRACKING_URI_local = "http://127.0.0.1:5008/"
 MLFLOW_TRACKING_URI = "http://host.docker.internal:5008"
