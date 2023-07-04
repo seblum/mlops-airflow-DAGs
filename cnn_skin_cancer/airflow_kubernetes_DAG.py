@@ -199,15 +199,15 @@ def cnn_skin_cancer_workflow():
         }
         return return_dict
 
-    serve_fastapi_app_op = BashOperator(
-        task_id="fastapi-serve-app",
-        bash_command='docker run --detach -p 80:80 -it seblum/model-serving:fastapi-serve-app && echo "fastapi-serve running"',
-    )
+    # serve_fastapi_app_op = BashOperator(
+    #     task_id="fastapi-serve-app",
+    #     bash_command='docker run --detach -p 80:80 -it seblum/model-serving:fastapi-serve-app && echo "fastapi-serve running"',
+    # )
 
-    serve_streamlit_app_op = BashOperator(
-        task_id="streamlit-inference-app",
-        bash_command='docker run --detach -p 8501:8501 -it seblum/model-serving:streamlit-inference-app && echo "streamlit-inference running"',
-    )
+    # serve_streamlit_app_op = BashOperator(
+    #     task_id="streamlit-inference-app",
+    #     bash_command='docker run --detach -p 8501:8501 -it seblum/model-serving:streamlit-inference-app && echo "streamlit-inference running"',
+    # )
 
     # CREATE PIPELINE
 
@@ -234,7 +234,7 @@ def cnn_skin_cancer_workflow():
     )
     compare_models_dict = compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval)
 
-    compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
+    # compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
 
 
 cnn_skin_cancer_workflow()
