@@ -18,10 +18,21 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
 
-SECRET_AWS_REGION = Secret(
-   deploy_type="env", deploy_target="AWS_REGION_2", secret="airflow-tasks-aws-access-credentials", key="AWS_REGION"
+SECRET_AWS_BUCKET = Secret(
+   deploy_type="env", deploy_target="AWS_BUCKET", secret="airflow-tasks-aws-access-credentials", key="AWS_BUCKET"
 )
-
+SECRET_AWS_REGION = Secret(
+   deploy_type="env", deploy_target="AWS_REGION", secret="airflow-tasks-aws-access-credentials", key="AWS_REGION"
+)
+SECRET_AWS_ACCESS_KEY_ID = Secret(
+   deploy_type="env", deploy_target="AWS_ACCESS_KEY_ID", secret="airflow-tasks-aws-access-credentials", key="AWS_ACCESS_KEY_ID"
+)
+SECRET_AWS_SECRET_ACCESS_KEY = Secret(
+   deploy_type="env", deploy_target="AWS_SECRET_ACCESS_KEY", secret="airflow-tasks-aws-access-credentials", key="AWS_SECRET_ACCESS_KEY"
+)
+SECRET_AWS_ROLE_NAME = Secret(
+   deploy_type="env", deploy_target="AWS_ROLE_NAME", secret="airflow-tasks-aws-access-credentials", key="AWS_ROLE_NAME"
+)
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_cluster)
 
 def make_mlflow():
