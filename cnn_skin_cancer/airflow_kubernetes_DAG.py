@@ -8,6 +8,7 @@ from airflow.providers.docker.operators.docker import DockerOperator
 
 MLFLOW_TRACKING_URI_local = "http://127.0.0.1:5008/"
 MLFLOW_TRACKING_URI = "http://host.docker.internal:5008"
+MLFLOW_TRACKING_URI_cluster = "mlflow.mlflow.svc.cluster.local"
 EXPERIMENT_NAME = "cnn_skin_cancer"
 AWS_BUCKET = os.getenv("AWS_BUCKET")
 AWS_REGION = os.getenv("AWS_REGION")
@@ -16,17 +17,17 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
 
 
-# import mlflow
-# mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_local)
+import mlflow
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_cluster)
 
-# try:
-#     # Creating an experiment
-#     mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
-# except:
-#     pass
-# # Setting the environment with the created experiment
-# mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
-mlflow_experiment_id = "dummy-id"
+try:
+    # Creating an experiment
+    mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
+except:
+    pass
+# Setting the environment with the created experiment
+mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
+#mlflow_experiment_id = "dummy-id"
 
 class Model_Class(Enum):
     """This enum includes different models."""
