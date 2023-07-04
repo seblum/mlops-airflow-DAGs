@@ -52,6 +52,7 @@ def make_mlflow():
     return mlflow_experiment_id
 
 
+# when dag is loaded, mlflow experiment is created
 mlflow_experiment_id = make_mlflow()
 # mlflow_experiment_id = "dummy-id"
 
@@ -132,22 +133,6 @@ def cnn_skin_cancer_workflow():
         Returns:
             dict: A dictionary containing the paths to preprocessed data.
         """
-        import mlflow
-
-        mlflow.set_tracking_uri("http://mlflow-service.mlflow.svc.cluster.local")
-
-        def make_mlflow():
-            try:
-                # Creating an experiment
-                mlflow_experiment_id = mlflow.create_experiment("cv2v")
-            except:
-                pass
-            # Setting the environment with the created experiment
-            mlflow_experiment_id = mlflow.set_experiment("cv2v").experiment_id
-            return mlflow_experiment_id
-
-        _ = make_mlflow()
-
         import os
 
         from src.preprocessing import data_preprocessing
@@ -170,13 +155,23 @@ def cnn_skin_cancer_workflow():
         }
         return return_dict
 
-    @task.docker(
+    @task.kubernetes(
         image=skin_cancer_container_image,
+        name="preprocessing",
+        namespace="airflow",
         multiple_outputs=True,
-        environment=kwargs_env_data,
-        working_dir="/app",
-        force_pull=True,
-        network_mode="bridge",
+        env_vars=kwargs_env_data,
+        in_cluster=True,
+        # working_dir="/app",
+        # force_pull=True,
+        # network_mode="bridge",
+        secrets=[
+            SECRET_AWS_BUCKET,
+            SECRET_AWS_REGION,
+            SECRET_AWS_ACCESS_KEY_ID,
+            SECRET_AWS_SECRET_ACCESS_KEY,
+            SECRET_AWS_ROLE_NAME,
+        ],
     )
     def model_training_op(mlflow_experiment_id, model_class, model_params, input):
         """
@@ -212,12 +207,23 @@ def cnn_skin_cancer_workflow():
         }
         return return_dict
 
-    @task.docker(
+    @task.kubernetes(
         image=skin_cancer_container_image,
-        multiple_outputs=True,
-        environment=kwargs_env_data,
-        force_pull=True,
-        network_mode="bridge",
+        name="preprocessing",
+        namespace="airflow",
+        # multiple_outputs=True,
+        env_vars=kwargs_env_data,
+        in_cluster=True,
+        # working_dir="/app",
+        # force_pull=True,
+        # network_mode="bridge",
+        secrets=[
+            SECRET_AWS_BUCKET,
+            SECRET_AWS_REGION,
+            SECRET_AWS_ACCESS_KEY_ID,
+            SECRET_AWS_SECRET_ACCESS_KEY,
+            SECRET_AWS_ROLE_NAME,
+        ],
     )
     def compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval):
         """
