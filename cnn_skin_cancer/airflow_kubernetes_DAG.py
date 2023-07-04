@@ -26,7 +26,7 @@ AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
 #     pass
 # # Setting the environment with the created experiment
 # mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
-
+mlflow_experiment_id = "dummy-id"
 
 class Model_Class(Enum):
     """This enum includes different models."""
