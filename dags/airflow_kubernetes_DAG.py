@@ -6,6 +6,7 @@ import pendulum
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
+from airflow.kubernetes.secrets import Secret
 
 MLFLOW_TRACKING_URI_local = "http://127.0.0.1:5008/"
 MLFLOW_TRACKING_URI = "http://host.docker.internal:5008"
@@ -17,17 +18,24 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
 
+SECRET_AWS_REGION = Secret(
+   deploy_type="env", deploy_target="AWS_REGION_2", secret="airflow_tasks_aws_access_credentials", key="AWS_REGION"
+)
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_cluster)
 
-try:
-    # Creating an experiment
-    mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
-except:
-    pass
-# Setting the environment with the created experiment
-mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
+def make_mlflow():
+    try:
+        # Creating an experiment
+        mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
+    except:
+        pass
+    # Setting the environment with the created experiment
+    mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
+    return mlflow_experiment_id
+
 mlflow_experiment_id = "dummy-id"
+
 
 class Model_Class(Enum):
     """This enum includes different models."""
@@ -93,7 +101,7 @@ def cnn_skin_cancer_workflow():
         #working_dir="/app",
         #force_pull=True,
         #network_mode="bridge",
-        secrets=[AWS_REGION]
+        secrets=[SECRET_AWS_REGION]
     )
     def preprocessing_op(mlflow_experiment_id):
         """
