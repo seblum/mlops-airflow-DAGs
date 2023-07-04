@@ -89,10 +89,11 @@ def cnn_skin_cancer_workflow():
         namespace="airflow",
         #multiple_outputs=True,
         env_vars=kwargs_env_data,
-        in_cluster=True
+        in_cluster=True,
         #working_dir="/app",
         #force_pull=True,
         #network_mode="bridge",
+        secrets=[AWS_REGION]
     )
     def preprocessing_op(mlflow_experiment_id):
         """
