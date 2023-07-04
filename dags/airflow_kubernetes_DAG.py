@@ -85,8 +85,9 @@ skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 def cnn_skin_cancer_workflow():
     @task.kubernetes(
         image=skin_cancer_container_image,
+        name="preprocessing"
         multiple_outputs=True,
-        #environment=kwargs_env_data,
+        env_vars=kwargs_env_data,
         in_cluster=True
         #working_dir="/app",
         #force_pull=True,
