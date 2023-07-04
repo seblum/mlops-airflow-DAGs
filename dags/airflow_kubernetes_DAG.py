@@ -4,41 +4,43 @@ from enum import Enum
 import mlflow
 import pendulum
 from airflow.decorators import dag, task
+from airflow.kubernetes.secret import Secret
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.kubernetes.secret import Secret
 
-MLFLOW_TRACKING_URI_local = "http://127.0.0.1:5008/"
-MLFLOW_TRACKING_URI = "http://host.docker.internal:5008"
-MLFLOW_TRACKING_URI_cluster = "mlflow.mlflow.svc.cluster.local"
+# MLFLOW_TRACKING_URI_cluster = "http://mlflow.mlflow.svc.cluster.local:5000"
+MLFLOW_TRACKING_URI = "mlflow.mlflow.svc.cluster.local"
 EXPERIMENT_NAME = "cnn_skin_cancer"
-AWS_BUCKET = os.getenv("AWS_BUCKET")
-AWS_REGION = os.getenv("AWS_REGION")
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
 
 SECRET_AWS_BUCKET = Secret(
-   deploy_type="env", deploy_target="AWS_BUCKET", secret="airflow-tasks-aws-access-credentials", key="AWS_BUCKET"
+    deploy_type="env", deploy_target="AWS_BUCKET", secret="airflow-tasks-aws-access-credentials", key="AWS_BUCKET"
 )
 SECRET_AWS_REGION = Secret(
-   deploy_type="env", deploy_target="AWS_REGION", secret="airflow-tasks-aws-access-credentials", key="AWS_REGION"
+    deploy_type="env", deploy_target="AWS_REGION", secret="airflow-tasks-aws-access-credentials", key="AWS_REGION"
 )
 SECRET_AWS_ACCESS_KEY_ID = Secret(
-   deploy_type="env", deploy_target="AWS_ACCESS_KEY_ID", secret="airflow-tasks-aws-access-credentials", key="AWS_ACCESS_KEY_ID"
+    deploy_type="env",
+    deploy_target="AWS_ACCESS_KEY_ID",
+    secret="airflow-tasks-aws-access-credentials",
+    key="AWS_ACCESS_KEY_ID",
 )
 SECRET_AWS_SECRET_ACCESS_KEY = Secret(
-   deploy_type="env", deploy_target="AWS_SECRET_ACCESS_KEY", secret="airflow-tasks-aws-access-credentials", key="AWS_SECRET_ACCESS_KEY"
+    deploy_type="env",
+    deploy_target="AWS_SECRET_ACCESS_KEY",
+    secret="airflow-tasks-aws-access-credentials",
+    key="AWS_SECRET_ACCESS_KEY",
 )
 SECRET_AWS_ROLE_NAME = Secret(
-   deploy_type="env", deploy_target="AWS_ROLE_NAME", secret="airflow-tasks-aws-access-credentials", key="AWS_ROLE_NAME"
+    deploy_type="env", deploy_target="AWS_ROLE_NAME", secret="airflow-tasks-aws-access-credentials", key="AWS_ROLE_NAME"
 )
+
 tracking_uri = mlflow.get_tracking_uri()
 print(tracking_uri)
 
-mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_cluster)
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 tracking_uri = mlflow.get_tracking_uri()
 print(tracking_uri)
+
 
 def make_mlflow():
     try:
@@ -49,6 +51,7 @@ def make_mlflow():
     # Setting the environment with the created experiment
     mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
     return mlflow_experiment_id
+
 
 mlflow_experiment_id = "dummy-id"
 
@@ -63,21 +66,10 @@ class Model_Class(Enum):
 
 # Set various model params and airflow or environment args
 
-dag_default_args = {
-    "owner": "seblum",
-    "depends_on_past": False,
-    "start_date": pendulum.datetime(2021, 1, 1, tz="UTC"),
-    "tags": ["Keras CNN to classify skin cancer"],
-}
 
 kwargs_env_data = {
     "MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI,
     "MLFLOW_EXPERIMENT_ID": mlflow_experiment_id,
-    "AWS_ACCESS_KEY_ID": AWS_ACCESS_KEY_ID,
-    "AWS_SECRET_ACCESS_KEY": AWS_SECRET_ACCESS_KEY,
-    "AWS_BUCKET": AWS_BUCKET,
-    "AWS_REGION": AWS_REGION,
-    "AWS_ROLE_NAME": AWS_ROLE_NAME,
 }
 
 model_params = {
@@ -102,7 +94,12 @@ skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 
 @dag(
     "cnn_skin_cancer_docker_workflow",
-    default_args=dag_default_args,
+    default_args={
+        "owner": "seblum",
+        "depends_on_past": False,
+        "start_date": pendulum.datetime(2021, 1, 1, tz="UTC"),
+        "tags": ["Keras CNN to classify skin cancer"],
+    },
     schedule_interval=None,
     max_active_runs=1,
 )
@@ -111,13 +108,19 @@ def cnn_skin_cancer_workflow():
         image=skin_cancer_container_image,
         name="preprocessing",
         namespace="airflow",
-        #multiple_outputs=True,
+        # multiple_outputs=True,
         env_vars=kwargs_env_data,
         in_cluster=True,
-        #working_dir="/app",
-        #force_pull=True,
-        #network_mode="bridge",
-        secrets=[SECRET_AWSECRET_AWS_BUCKET,SECRET_AWS_REGION,SECRET_AWS_ACCESS_KEY_ID,SECRET_AWS_SECRET_ACCESS_KEY,SECRET_AWS_ROLE_NAMES_REGION]
+        # working_dir="/app",
+        # force_pull=True,
+        # network_mode="bridge",
+        secrets=[
+            SECRET_AWS_BUCKET,
+            SECRET_AWS_REGION,
+            SECRET_AWS_ACCESS_KEY_ID,
+            SECRET_AWS_SECRET_ACCESS_KEY,
+            SECRET_AWS_ROLE_NAME,
+        ],
     )
     def preprocessing_op(mlflow_experiment_id):
         """
