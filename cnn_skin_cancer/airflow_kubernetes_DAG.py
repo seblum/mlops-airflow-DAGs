@@ -1,7 +1,6 @@
 import os
 from enum import Enum
 
-import mlflow
 import pendulum
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
@@ -16,15 +15,17 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
 
-mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_local)
 
-try:
-    # Creating an experiment
-    mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
-except:
-    pass
-# Setting the environment with the created experiment
-mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
+# import mlflow
+# mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_local)
+
+# try:
+#     # Creating an experiment
+#     mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
+# except:
+#     pass
+# # Setting the environment with the created experiment
+# mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
 
 
 class Model_Class(Enum):
