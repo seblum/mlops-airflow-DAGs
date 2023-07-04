@@ -8,7 +8,7 @@ from airflow.kubernetes.secret import Secret
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 
-MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"
+MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"  # TODO kann eigentlich in configmap
 EXPERIMENT_NAME = "cnn_skin_cancer"
 
 SECRET_AWS_BUCKET = Secret(
@@ -33,12 +33,8 @@ SECRET_AWS_ROLE_NAME = Secret(
     deploy_type="env", deploy_target="AWS_ROLE_NAME", secret="airflow-tasks-aws-access-credentials", key="AWS_ROLE_NAME"
 )
 
-# tracking_uri = mlflow.get_tracking_uri()
-# print(tracking_uri)
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-# tracking_uri = mlflow.get_tracking_uri()
-# print(tracking_uri)
 
 
 def make_mlflow():
@@ -109,15 +105,10 @@ def cnn_skin_cancer_workflow():
         image=skin_cancer_container_image,
         name="preprocessing",
         namespace="airflow",
-        # multiple_outputs=True,
         env_vars=kwargs_env_data,
         in_cluster=True,
         get_logs=True,
         do_xcom_push=True,
-        # xcom_push=True,
-        # working_dir="/app",
-        # force_pull=True,
-        # network_mode="bridge",
         secrets=[
             SECRET_AWS_BUCKET,
             SECRET_AWS_REGION,
@@ -161,12 +152,10 @@ def cnn_skin_cancer_workflow():
     @task.kubernetes(
         image=skin_cancer_container_image,
         namespace="airflow",
-        multiple_outputs=True,
         env_vars=kwargs_env_data,
         in_cluster=True,
-        # working_dir="/app",
-        # force_pull=True,
-        # network_mode="bridge",
+        get_logs=True,
+        do_xcom_push=True,
         secrets=[
             SECRET_AWS_BUCKET,
             SECRET_AWS_REGION,
@@ -213,12 +202,10 @@ def cnn_skin_cancer_workflow():
         image=skin_cancer_container_image,
         name="compare-models",
         namespace="airflow",
-        # multiple_outputs=True,
         env_vars=kwargs_env_data,
         in_cluster=True,
-        # working_dir="/app",
-        # force_pull=True,
-        # network_mode="bridge",
+        get_logs=True,
+        do_xcom_push=True,
         secrets=[
             SECRET_AWS_BUCKET,
             SECRET_AWS_REGION,
