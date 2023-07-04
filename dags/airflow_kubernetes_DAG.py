@@ -33,7 +33,12 @@ SECRET_AWS_SECRET_ACCESS_KEY = Secret(
 SECRET_AWS_ROLE_NAME = Secret(
    deploy_type="env", deploy_target="AWS_ROLE_NAME", secret="airflow-tasks-aws-access-credentials", key="AWS_ROLE_NAME"
 )
+tracking_uri = mlflow.get_tracking_uri()
+print(tracking_uri)
+
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_cluster)
+tracking_uri = mlflow.get_tracking_uri()
+print(tracking_uri)
 
 def make_mlflow():
     try:
