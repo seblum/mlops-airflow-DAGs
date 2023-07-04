@@ -135,7 +135,7 @@ def cnn_skin_cancer_workflow():
         """
         import mlflow
 
-        mlflow.set_tracking_uri("http://mlflow.mlflow.svc.cluster.local:5000")
+        mlflow.set_tracking_uri("http://mlflow.mlflow.svc.cluster.local")
 
         def make_mlflow():
             try:
