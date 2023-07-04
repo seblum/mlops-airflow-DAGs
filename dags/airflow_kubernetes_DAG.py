@@ -112,7 +112,7 @@ def cnn_skin_cancer_workflow():
         #working_dir="/app",
         #force_pull=True,
         #network_mode="bridge",
-        secrets=[SECRET_AWS_REGION]
+        secrets=[SECRET_AWSECRET_AWS_BUCKET,SECRET_AWS_REGION,SECRET_AWS_ACCESS_KEY_ID,SECRET_AWS_SECRET_ACCESS_KEY,SECRET_AWS_ROLE_NAMES_REGION]
     )
     def preprocessing_op(mlflow_experiment_id):
         """
