@@ -9,7 +9,7 @@ from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 
 # MLFLOW_TRACKING_URI_cluster = "http://mlflow.mlflow.svc.cluster.local:5000"
-MLFLOW_TRACKING_URI = "http://mlflow.mlflow.svc.cluster.local:5000"
+MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local:5000"
 EXPERIMENT_NAME = "cnn_skin_cancer"
 
 SECRET_AWS_BUCKET = Secret(
@@ -42,19 +42,19 @@ mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 # print(tracking_uri)
 
 
-# def make_mlflow():
-#     try:
-#         # Creating an experiment
-#         mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
-#     except:
-#         pass
-#     # Setting the environment with the created experiment
-#     mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
-#     return mlflow_experiment_id
+def make_mlflow():
+    try:
+        # Creating an experiment
+        mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
+    except:
+        pass
+    # Setting the environment with the created experiment
+    mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
+    return mlflow_experiment_id
 
 
-# mlflow_experiment_id = make_mlflow()
-mlflow_experiment_id = "dummy-id"
+mlflow_experiment_id = make_mlflow()
+# mlflow_experiment_id = "dummy-id"
 
 
 class Model_Class(Enum):
@@ -140,14 +140,14 @@ def cnn_skin_cancer_workflow():
         def make_mlflow():
             try:
                 # Creating an experiment
-                mlflow_experiment_id = mlflow.create_experiment("cvv")
+                mlflow_experiment_id = mlflow.create_experiment("cv2v")
             except:
                 pass
             # Setting the environment with the created experiment
-            mlflow_experiment_id = mlflow.set_experiment("cvv").experiment_id
+            mlflow_experiment_id = mlflow.set_experiment("cv2v").experiment_id
             return mlflow_experiment_id
 
-        mlflow_experiment_id = make_mlflow()
+        _ = make_mlflow()
 
         import os
 
