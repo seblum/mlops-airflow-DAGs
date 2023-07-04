@@ -42,19 +42,19 @@ mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 # print(tracking_uri)
 
 
-def make_mlflow():
-    try:
-        # Creating an experiment
-        mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
-    except:
-        pass
-    # Setting the environment with the created experiment
-    mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
-    return mlflow_experiment_id
+# def make_mlflow():
+#     try:
+#         # Creating an experiment
+#         mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
+#     except:
+#         pass
+#     # Setting the environment with the created experiment
+#     mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
+#     return mlflow_experiment_id
 
 
-mlflow_experiment_id = make_mlflow()
-# mlflow_experiment_id = "dummy-id"
+# mlflow_experiment_id = make_mlflow()
+mlflow_experiment_id = "dummy-id"
 
 
 class Model_Class(Enum):
@@ -133,6 +133,21 @@ def cnn_skin_cancer_workflow():
         Returns:
             dict: A dictionary containing the paths to preprocessed data.
         """
+
+        mlflow.set_tracking_uri("http://mlflow.mlflow.svc.cluster.local:5000")
+
+        def make_mlflow():
+            try:
+                # Creating an experiment
+                mlflow_experiment_id = mlflow.create_experiment("cvv")
+            except:
+                pass
+            # Setting the environment with the created experiment
+            mlflow_experiment_id = mlflow.set_experiment("cvv").experiment_id
+            return mlflow_experiment_id
+
+        mlflow_experiment_id = make_mlflow()
+
         import os
 
         from src.preprocessing import data_preprocessing
