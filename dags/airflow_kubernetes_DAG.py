@@ -157,7 +157,6 @@ def cnn_skin_cancer_workflow():
 
     @task.kubernetes(
         image=skin_cancer_container_image,
-        name="preprocessing",
         namespace="airflow",
         multiple_outputs=True,
         env_vars=kwargs_env_data,
@@ -209,7 +208,7 @@ def cnn_skin_cancer_workflow():
 
     @task.kubernetes(
         image=skin_cancer_container_image,
-        name="preprocessing",
+        name="compare-models",
         namespace="airflow",
         # multiple_outputs=True,
         env_vars=kwargs_env_data,
