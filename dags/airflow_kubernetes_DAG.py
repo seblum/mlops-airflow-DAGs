@@ -34,12 +34,12 @@ SECRET_AWS_ROLE_NAME = Secret(
     deploy_type="env", deploy_target="AWS_ROLE_NAME", secret="airflow-tasks-aws-access-credentials", key="AWS_ROLE_NAME"
 )
 
-tracking_uri = mlflow.get_tracking_uri()
-print(tracking_uri)
+# tracking_uri = mlflow.get_tracking_uri()
+# print(tracking_uri)
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-tracking_uri = mlflow.get_tracking_uri()
-print(tracking_uri)
+# tracking_uri = mlflow.get_tracking_uri()
+# print(tracking_uri)
 
 
 def make_mlflow():
@@ -53,7 +53,8 @@ def make_mlflow():
     return mlflow_experiment_id
 
 
-mlflow_experiment_id = "dummy-id"
+mlflow_experiment_id = make_mlflow()
+# mlflow_experiment_id = "dummy-id"
 
 
 class Model_Class(Enum):
