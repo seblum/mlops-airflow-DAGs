@@ -112,6 +112,7 @@ def cnn_skin_cancer_workflow():
         # multiple_outputs=True,
         env_vars=kwargs_env_data,
         in_cluster=True,
+        xcom_push=True,
         # working_dir="/app",
         # force_pull=True,
         # network_mode="bridge",
