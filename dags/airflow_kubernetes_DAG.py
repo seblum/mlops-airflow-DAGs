@@ -27,7 +27,6 @@ except:
     pass
 # Setting the environment with the created experiment
 mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
-#mlflow_experiment_id = "dummy-id"
 
 class Model_Class(Enum):
     """This enum includes different models."""
@@ -83,14 +82,13 @@ skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
     max_active_runs=1,
 )
 def cnn_skin_cancer_workflow():
-    @task.kubernetes(
+    @task.docker(
         image=skin_cancer_container_image,
         multiple_outputs=True,
         environment=kwargs_env_data,
-        in_cluster=True
-        #working_dir="/app",
-        #force_pull=True,
-        #network_mode="bridge",
+        working_dir="/app",
+        force_pull=True,
+        network_mode="bridge",
     )
     def preprocessing_op(mlflow_experiment_id):
         """
