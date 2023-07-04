@@ -83,13 +83,14 @@ skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
     max_active_runs=1,
 )
 def cnn_skin_cancer_workflow():
-    @task.docker(
+    @task.kubernetes(
         image=skin_cancer_container_image,
         multiple_outputs=True,
         environment=kwargs_env_data,
-        working_dir="/app",
-        force_pull=True,
-        network_mode="bridge",
+        in_cluster=True
+        #working_dir="/app",
+        #force_pull=True,
+        #network_mode="bridge",
     )
     def preprocessing_op(mlflow_experiment_id):
         """
