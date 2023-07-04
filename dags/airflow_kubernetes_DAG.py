@@ -9,7 +9,7 @@ from airflow.providers.docker.operators.docker import DockerOperator
 
 MLFLOW_TRACKING_URI_local = "http://127.0.0.1:5008/"
 MLFLOW_TRACKING_URI = "http://host.docker.internal:5008"
-MLFLOW_TRACKING_URI_cluster = "mlflow.mlflow.svc.cluster.local"
+MLFLOW_TRACKING_URI_cluster = "http://mlflow.mlflow.svc.cluster.local"
 EXPERIMENT_NAME = "cnn_skin_cancer"
 AWS_BUCKET = os.getenv("AWS_BUCKET")
 AWS_REGION = os.getenv("AWS_REGION")
