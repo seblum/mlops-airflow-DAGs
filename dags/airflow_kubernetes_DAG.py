@@ -90,7 +90,7 @@ skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 
 
 @dag(
-    "cnn_skin_cancer_docker_workflow",
+    "cnn_skin_cancer_k8s_workflow",
     default_args={
         "owner": "seblum",
         "depends_on_past": False,
@@ -107,9 +107,9 @@ def cnn_skin_cancer_workflow():
         namespace="airflow",
         env_vars=kwargs_env_data,
         in_cluster=True,
-        #get_logs=True,
+        get_logs=True,
         do_xcom_push=True,
-        # service_account_name="airflow-sa",
+        service_account_name="airflow-sa",
         secrets=[
             SECRET_AWS_BUCKET,
             SECRET_AWS_REGION,
