@@ -131,8 +131,15 @@ def cnn_skin_cancer_workflow():
 
         from src.preprocessing import data_preprocessing
 
-        aws_bucket = os.getenv("AWS_BUCKET")
-
+        AWS_BUCKET = os.getenv("AWS_BUCKET")
+        AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+        AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+        AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
+        print(AWS_BUCKET)
+        print(AWS_ACCESS_KEY_ID)
+        print(AWS_SECRET_ACCESS_KEY)
+        print(AWS_ROLE_NAME)
+        
         (
             X_train_data_path,
             y_train_data_path,
