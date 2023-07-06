@@ -107,7 +107,7 @@ def cnn_skin_cancer_workflow():
         namespace="airflow",
         env_vars=kwargs_env_data,
         in_cluster=True,
-        get_logs=True,
+        #get_logs=True,
         do_xcom_push=True,
         # service_account_name="airflow-sa",
         secrets=[
