@@ -12,25 +12,25 @@ MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"  # TODO k
 EXPERIMENT_NAME = "cnn_skin_cancer"
 
 SECRET_AWS_BUCKET = Secret(
-    deploy_type="env", deploy_target="AWS_BUCKET", secret="airflow-tasks-aws-access-credentials", key="AWS_BUCKET"
+    deploy_type="env", deploy_target="AWS_BUCKET", secret="airflow-s3-data-bucket-access-credentials", key="AWS_BUCKET"
 )
 SECRET_AWS_REGION = Secret(
-    deploy_type="env", deploy_target="AWS_REGION", secret="airflow-tasks-aws-access-credentials", key="AWS_REGION"
+    deploy_type="env", deploy_target="AWS_REGION", secret="airflow-s3-data-bucket-access-credentials", key="AWS_REGION"
 )
 SECRET_AWS_ACCESS_KEY_ID = Secret(
     deploy_type="env",
     deploy_target="AWS_ACCESS_KEY_ID",
-    secret="airflow-tasks-aws-access-credentials",
+    secret="airflow-s3-data-bucket-access-credentials",
     key="AWS_ACCESS_KEY_ID",
 )
 SECRET_AWS_SECRET_ACCESS_KEY = Secret(
     deploy_type="env",
     deploy_target="AWS_SECRET_ACCESS_KEY",
-    secret="airflow-tasks-aws-access-credentials",
+    secret="airflow-s3-data-bucket-access-credentials",
     key="AWS_SECRET_ACCESS_KEY",
 )
 SECRET_AWS_ROLE_NAME = Secret(
-    deploy_type="env", deploy_target="AWS_ROLE_NAME", secret="airflow-tasks-aws-access-credentials", key="AWS_ROLE_NAME"
+    deploy_type="env", deploy_target="AWS_ROLE_NAME", secret="airflow-s3-data-bucket-access-credentials", key="AWS_ROLE_NAME"
 )
 
 
