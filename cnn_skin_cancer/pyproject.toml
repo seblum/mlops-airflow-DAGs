@@ -2,7 +2,7 @@
 name = "skcacnn"
 version = "0.1.0"
 description = ""
-authors = ["Sebastian Blum <sebastian.blum@alexanderthamm.com>"]
+authors = ["Sebastian Blum <sebast.blum@gmail.com>"]
 readme = "README.md"
 packages = [{include = "src/*"}]
 
