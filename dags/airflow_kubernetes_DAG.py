@@ -8,7 +8,7 @@ from airflow.kubernetes.secret import Secret
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 
-MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"  # TODO kann eigentlich in configmap
+MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"  # TODO aus airflow var lesen
 EXPERIMENT_NAME = "cnn_skin_cancer"
 
 SECRET_AWS_BUCKET = Secret(
@@ -30,7 +30,10 @@ SECRET_AWS_SECRET_ACCESS_KEY = Secret(
     key="AWS_SECRET_ACCESS_KEY",
 )
 SECRET_AWS_ROLE_NAME = Secret(
-    deploy_type="env", deploy_target="AWS_ROLE_NAME", secret="airflow-s3-data-bucket-access-credentials", key="AWS_ROLE_NAME"
+    deploy_type="env",
+    deploy_target="AWS_ROLE_NAME",
+    secret="airflow-s3-data-bucket-access-credentials",
+    key="AWS_ROLE_NAME",
 )
 
 
@@ -109,14 +112,14 @@ def cnn_skin_cancer_workflow():
         in_cluster=True,
         get_logs=True,
         do_xcom_push=True,
-        #service_account_name="airflow-sa",
+        # service_account_name="airflow-sa",
         secrets=[
             SECRET_AWS_BUCKET,
             SECRET_AWS_REGION,
             SECRET_AWS_ACCESS_KEY_ID,
             SECRET_AWS_SECRET_ACCESS_KEY,
             SECRET_AWS_ROLE_NAME,
-        ]
+        ],
     )
     def preprocessing_op(mlflow_experiment_id):
         """
@@ -134,19 +137,6 @@ def cnn_skin_cancer_workflow():
         time.sleep(60)
         from src.preprocessing import data_preprocessing
 
-        aws_region = os.getenv("AWS_REGION")
-        aws_region_default = os.getenv("AWS_REGION_DEFAULT")
-        print(aws_region)
-        print(aws_region_default)
-        aws_bucket = os.getenv("AWS_BUCKET")
-        AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-        AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-        AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
-        print(aws_bucket)
-        print(AWS_ACCESS_KEY_ID)
-        print(AWS_SECRET_ACCESS_KEY)
-        print(AWS_ROLE_NAME)
-        
         (
             X_train_data_path,
             y_train_data_path,
@@ -176,7 +166,7 @@ def cnn_skin_cancer_workflow():
             SECRET_AWS_ACCESS_KEY_ID,
             SECRET_AWS_SECRET_ACCESS_KEY,
             SECRET_AWS_ROLE_NAME,
-        ]
+        ],
     )
     def model_training_op(mlflow_experiment_id, model_class, model_params, input):
         """
@@ -226,7 +216,7 @@ def cnn_skin_cancer_workflow():
             SECRET_AWS_ACCESS_KEY_ID,
             SECRET_AWS_SECRET_ACCESS_KEY,
             SECRET_AWS_ROLE_NAME,
-        ]
+        ],
     )
     def compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval):
         """
