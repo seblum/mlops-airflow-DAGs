@@ -148,6 +148,7 @@ class AWSSession:
         print(self.__boto3_role_session)
         print("__s3fs_session")
         print(self.__s3fs_session)
+        print(self.__s3fs_session.ls("s3://airflowdatabucket/data/train/benign"))
 
     # def get_sessions(self) -> Tuple[Session, Session]:
     #     return self.boto3_role_session, self.s3fs_session
