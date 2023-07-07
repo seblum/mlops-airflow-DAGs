@@ -139,6 +139,11 @@ class AWSSession:
             token=tmp_aws_session_token,
             anon=False,
         )
+        print("sessiontest")
+        print("__boto3_role_session")
+        print(self.__boto3_role_session)
+        print("__s3fs_session")
+        print(self.__s3fs_session)
 
     # def get_sessions(self) -> Tuple[Session, Session]:
     #     return self.boto3_role_session, self.s3fs_session
