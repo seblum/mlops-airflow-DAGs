@@ -133,9 +133,9 @@ def cnn_skin_cancer_workflow():
             dict: A dictionary containing the paths to preprocessed data.
         """
         import os
-        import time
+        #import time
 
-        time.sleep(6000)
+        #time.sleep(6000)
         from src.preprocessing import data_preprocessing
 
         aws_bucket = os.getenv("AWS_BUCKET")
