@@ -134,6 +134,10 @@ def cnn_skin_cancer_workflow():
         time.sleep(60)
         from src.preprocessing import data_preprocessing
 
+        aws_region = os.getenv("AWS_REGION")
+        aws_region_default = os.getenv("AWS_REGION_DEFAULT")
+        print(aws_region)
+        print(aws_region_default)
         aws_bucket = os.getenv("AWS_BUCKET")
         AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
         AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
