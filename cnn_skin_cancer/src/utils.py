@@ -81,13 +81,18 @@ class AWSSession:
         Raises:
             None
         """
+        print("_get_role_access")
+        print(self.__region_name)
         sts = session.client("sts", region_name=self.__region_name)
+        print(sts)
         account_id = sts.get_caller_identity()["Account"]
+        print(account_id)
         # https://www.learnaws.org/2022/09/30/aws-boto3-assume-role/
         response = sts.assume_role(
             RoleArn=f"arn:aws:iam::{account_id}:role/{self.__aws_role_name}",
             RoleSessionName=f"{self.__aws_role_name}-session",
         )
+        print(response)
         return (
             response["Credentials"]["AccessKeyId"],
             response["Credentials"]["SecretAccessKey"],
@@ -107,6 +112,7 @@ class AWSSession:
         Raises:
             None
         """
+        print("set_sessions")
         print(self.__aws_access_key_id)
         print(self.__aws_secret_access_key)
         print(self.__aws_role_name)
