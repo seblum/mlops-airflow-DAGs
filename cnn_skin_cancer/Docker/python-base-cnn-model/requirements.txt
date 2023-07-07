@@ -11,3 +11,4 @@ tensorflow==2.11.0
 #boto3==1.26.142
 #aiobotocore==2.5.0
 #botocore==1.29.142
+apache-airflow=2
