@@ -215,4 +215,6 @@ class AWSSession:
         Raises:
             None
         """
+        print("list_files_in_bucket")
+        print(self.__s3fs_session)
         return self.__s3fs_session.ls(path)
