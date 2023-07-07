@@ -101,6 +101,11 @@ skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
     max_active_runs=1,
 )
 def cnn_skin_cancer_workflow():
+    @task
+    )
+    def test():
+        print("This is a test")
+
     @task.kubernetes(
         image=skin_cancer_container_image,
         name="preprocessing",
@@ -265,6 +270,7 @@ def cnn_skin_cancer_workflow():
 
     # CREATE PIPELINE
 
+    test()
     preprocessed_data = preprocessing_op(
         mlflow_experiment_id=mlflow_experiment_id,
     )
