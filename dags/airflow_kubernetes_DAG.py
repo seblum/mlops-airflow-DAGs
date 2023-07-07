@@ -101,10 +101,6 @@ skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
     max_active_runs=1,
 )
 def cnn_skin_cancer_workflow():
-    @task()
-    def test():
-        print("This is a test")
-
     @task.kubernetes(
         image=skin_cancer_container_image,
         name="preprocessing",
@@ -120,7 +116,7 @@ def cnn_skin_cancer_workflow():
             SECRET_AWS_ACCESS_KEY_ID,
             SECRET_AWS_SECRET_ACCESS_KEY,
             SECRET_AWS_ROLE_NAME,
-        ],
+        ]
     )
     def preprocessing_op(mlflow_experiment_id):
         """
@@ -133,9 +129,9 @@ def cnn_skin_cancer_workflow():
             dict: A dictionary containing the paths to preprocessed data.
         """
         import os
-        #import time
+        import time
 
-        #time.sleep(120)
+        time.sleep(60)
         from src.preprocessing import data_preprocessing
 
         aws_bucket = os.getenv("AWS_BUCKET")
@@ -176,7 +172,7 @@ def cnn_skin_cancer_workflow():
             SECRET_AWS_ACCESS_KEY_ID,
             SECRET_AWS_SECRET_ACCESS_KEY,
             SECRET_AWS_ROLE_NAME,
-        ],
+        ]
     )
     def model_training_op(mlflow_experiment_id, model_class, model_params, input):
         """
@@ -226,7 +222,7 @@ def cnn_skin_cancer_workflow():
             SECRET_AWS_ACCESS_KEY_ID,
             SECRET_AWS_SECRET_ACCESS_KEY,
             SECRET_AWS_ROLE_NAME,
-        ],
+        ]
     )
     def compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval):
         """
@@ -269,7 +265,6 @@ def cnn_skin_cancer_workflow():
 
     # CREATE PIPELINE
 
-    test()
     preprocessed_data = preprocessing_op(
         mlflow_experiment_id=mlflow_experiment_id,
     )
