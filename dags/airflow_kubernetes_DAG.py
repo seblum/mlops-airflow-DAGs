@@ -92,7 +92,7 @@ model_params = {
     default_args={
         "owner": "seblum",
         "depends_on_past": False,
-        "start_date": pendulum.datetime(2021, 1, 1, tz="UTC"),
+        "start_date": pendulum.datetime(2021, 1, 1, tz="EUROPE/AMSTERDAM"),
         "tags": ["Keras CNN to classify skin cancer"],
     },
     schedule_interval=None,
