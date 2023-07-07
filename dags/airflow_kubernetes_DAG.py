@@ -10,29 +10,27 @@ from airflow.providers.docker.operators.docker import DockerOperator
 
 MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"  # TODO aus airflow var lesen
 EXPERIMENT_NAME = "cnn_skin_cancer"
+skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
+secret_name = "airflow-s3-data-bucket-access-credentials"
 
-SECRET_AWS_BUCKET = Secret(
-    deploy_type="env", deploy_target="AWS_BUCKET", secret="airflow-s3-data-bucket-access-credentials", key="AWS_BUCKET"
-)
-SECRET_AWS_REGION = Secret(
-    deploy_type="env", deploy_target="AWS_REGION", secret="airflow-s3-data-bucket-access-credentials", key="AWS_REGION"
-)
+SECRET_AWS_BUCKET = Secret(deploy_type="env", deploy_target="AWS_BUCKET", secret=secret_name, key="AWS_BUCKET")
+SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret=secret_name, key="AWS_REGION")
 SECRET_AWS_ACCESS_KEY_ID = Secret(
     deploy_type="env",
     deploy_target="AWS_ACCESS_KEY_ID",
-    secret="airflow-s3-data-bucket-access-credentials",
+    secret=secret_name,
     key="AWS_ACCESS_KEY_ID",
 )
 SECRET_AWS_SECRET_ACCESS_KEY = Secret(
     deploy_type="env",
     deploy_target="AWS_SECRET_ACCESS_KEY",
-    secret="airflow-s3-data-bucket-access-credentials",
+    secret=secret_name,
     key="AWS_SECRET_ACCESS_KEY",
 )
 SECRET_AWS_ROLE_NAME = Secret(
     deploy_type="env",
     deploy_target="AWS_ROLE_NAME",
-    secret="airflow-s3-data-bucket-access-credentials",
+    secret=secret_name,
     key="AWS_ROLE_NAME",
 )
 
@@ -53,7 +51,6 @@ def make_mlflow():
 
 # when dag is loaded, mlflow experiment is created
 mlflow_experiment_id = make_mlflow()
-# mlflow_experiment_id = "dummy-id"
 
 
 class Model_Class(Enum):
@@ -88,8 +85,6 @@ model_params = {
     "pooling": "avg",  # needed for resnet50
     "verbose": 2,
 }
-
-skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 
 
 @dag(
@@ -135,6 +130,9 @@ def cnn_skin_cancer_workflow():
         import time
 
         time.sleep(60)
+
+        aws_bucket = os.getenv("AWS_BUCKET")
+
         from src.preprocessing import data_preprocessing
 
         (
