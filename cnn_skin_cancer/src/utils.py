@@ -107,6 +107,10 @@ class AWSSession:
         Raises:
             None
         """
+        print(self.__aws_access_key_id)
+        print(self.__aws_secret_access_key)
+        print(self.__aws_role_name)
+        print(self.__region_name)
         user_session = boto3.Session(
             region_name=self.__region_name,
             aws_access_key_id=self.__aws_access_key_id,
