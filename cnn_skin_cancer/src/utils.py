@@ -139,6 +139,10 @@ class AWSSession:
             token=tmp_aws_session_token,
             anon=False,
         )
+        print("credentials")
+        print(tmp_aws_access_key_id)
+        print(tmp_aws_secret_access_key)
+        print(tmp_aws_session_token)
         print("sessiontest")
         print("__boto3_role_session")
         print(self.__boto3_role_session)
