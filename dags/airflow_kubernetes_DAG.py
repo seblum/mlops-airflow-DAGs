@@ -257,6 +257,13 @@ def cnn_skin_cancer_workflow():
 
     # CREATE PIPELINE
 
+    @task
+    def test():
+        import time
+
+        time.sleep(3600)
+
+    test()
     preprocessed_data = preprocessing_op(
         mlflow_experiment_id=mlflow_experiment_id,
     )
