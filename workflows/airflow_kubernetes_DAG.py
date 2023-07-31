@@ -5,12 +5,11 @@ import mlflow
 import pendulum
 from airflow.decorators import dag, task
 from airflow.kubernetes.secret import Secret
+from airflow.models import Variable
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.models import Variable
 
-
-#MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"  # TODO aus airflow var lesen
+# MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"  # TODO aus airflow var lesen
 EXPERIMENT_NAME = "cnn_skin_cancer"
 skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 secret_name = "airflow-s3-data-bucket-access-credentials"
@@ -41,7 +40,7 @@ SECRET_AWS_ROLE_NAME = Secret(
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 
-def make_mlflow():
+def make_mlflow() -> str:
     try:
         # Creating an experiment
         mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
@@ -119,7 +118,7 @@ def cnn_skin_cancer_workflow():
             SECRET_AWS_ROLE_NAME,
         ],
     )
-    def preprocessing_op(mlflow_experiment_id):
+    def preprocessing_op(mlflow_experiment_id: str) -> dict:
         """
         Perform data preprocessing.
 
@@ -169,7 +168,7 @@ def cnn_skin_cancer_workflow():
             SECRET_AWS_ROLE_NAME,
         ],
     )
-    def model_training_op(mlflow_experiment_id, model_class, model_params, input):
+    def model_training_op(mlflow_experiment_id: str, model_class: str, model_params: dict, input: dict) -> dict:
         """
         Train a model.
 
@@ -219,7 +218,7 @@ def cnn_skin_cancer_workflow():
             SECRET_AWS_ROLE_NAME,
         ],
     )
-    def compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval):
+    def compare_models_op(train_data_basic: dict, train_data_resnet50: dict, train_data_crossval: dict) -> dict:
         """
         Compare trained models.
 
@@ -248,25 +247,18 @@ def cnn_skin_cancer_workflow():
         }
         return return_dict
 
-    # serve_fastapi_app_op = BashOperator(
-    #     task_id="fastapi-serve-app",
-    #     bash_command='docker run --detach -p 80:80 -it seblum/model-serving:fastapi-serve-app && echo "fastapi-serve running"',
-    # )
+    serve_fastapi_app_op = BashOperator(
+        task_id="fastapi-serve-app",
+        bash_command='docker run --detach -p 80:80 -it seblum/model-serving:fastapi-serve-app && echo "fastapi-serve running"',
+    )
 
-    # serve_streamlit_app_op = BashOperator(
-    #     task_id="streamlit-inference-app",
-    #     bash_command='docker run --detach -p 8501:8501 -it seblum/model-serving:streamlit-inference-app && echo "streamlit-inference running"',
-    # )
+    serve_streamlit_app_op = BashOperator(
+        task_id="streamlit-inference-app",
+        bash_command='docker run --detach -p 8501:8501 -it seblum/model-serving:streamlit-inference-app && echo "streamlit-inference running"',
+    )
 
     # CREATE PIPELINE
 
-    @task
-    def test():
-        import time
-
-        time.sleep(3600)
-
-    test()
     preprocessed_data = preprocessing_op(
         mlflow_experiment_id=mlflow_experiment_id,
     )
@@ -290,7 +282,7 @@ def cnn_skin_cancer_workflow():
     )
     compare_models_dict = compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval)
 
-    # compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
+    compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
 
 
 cnn_skin_cancer_workflow()
