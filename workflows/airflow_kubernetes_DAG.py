@@ -7,12 +7,15 @@ from airflow.decorators import dag, task
 from airflow.kubernetes.secret import Secret
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
+from airflow.models import Variable
 
-MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"  # TODO aus airflow var lesen
+
+#MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"  # TODO aus airflow var lesen
 EXPERIMENT_NAME = "cnn_skin_cancer"
 skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 secret_name = "airflow-s3-data-bucket-access-credentials"
 
+MLFLOW_TRACKING_URI = Variable.get("MLFLOW_TRACKING_URI")
 SECRET_AWS_BUCKET = Secret(deploy_type="env", deploy_target="AWS_BUCKET", secret=secret_name, key="AWS_BUCKET")
 SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret=secret_name, key="AWS_REGION")
 SECRET_AWS_ACCESS_KEY_ID = Secret(
