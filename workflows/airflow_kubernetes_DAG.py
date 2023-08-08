@@ -282,7 +282,7 @@ def cnn_skin_cancer_workflow():
     )
     compare_models_dict = compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval)
 
-    # compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
+    compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
 
 
 cnn_skin_cancer_workflow()
