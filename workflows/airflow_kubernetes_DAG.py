@@ -9,7 +9,6 @@ from airflow.models import Variable
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 
-# MLFLOW_TRACKING_URI = "http://mlflow-service.mlflow.svc.cluster.local"  # TODO aus airflow var lesen
 EXPERIMENT_NAME = "cnn_skin_cancer"
 skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 secret_name = "airflow-s3-data-bucket-access-credentials"
@@ -52,7 +51,7 @@ def make_mlflow() -> str:
 
 
 # when dag is loaded, mlflow experiment is created
-mlflow_experiment_id = make_mlflow()
+# mlflow_experiment_id = make_mlflow()
 
 
 class Model_Class(Enum):
@@ -282,7 +281,7 @@ def cnn_skin_cancer_workflow():
     )
     compare_models_dict = compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval)
 
-    compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
+    # compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
 
 
 cnn_skin_cancer_workflow()
