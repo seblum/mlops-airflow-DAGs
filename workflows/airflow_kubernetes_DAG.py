@@ -66,11 +66,6 @@ class Model_Class(Enum):
 # Set various model params and airflow or environment args
 
 
-kwargs_env_data = {
-    "MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI,
-    "MLFLOW_EXPERIMENT_ID": mlflow_experiment_id,
-}
-
 model_params = {
     "num_classes": 2,
     "input_shape": (224, 224, 3),
@@ -105,7 +100,7 @@ def cnn_skin_cancer_workflow():
         image=skin_cancer_container_image,
         name="preprocessing",
         namespace="airflow",
-        env_vars=kwargs_env_data,
+        env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
         in_cluster=True,
         get_logs=True,
         do_xcom_push=True,
@@ -156,7 +151,7 @@ def cnn_skin_cancer_workflow():
     @task.kubernetes(
         image=skin_cancer_container_image,
         namespace="airflow",
-        env_vars=kwargs_env_data,
+        env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
         in_cluster=True,
         get_logs=True,
         do_xcom_push=True,
@@ -206,7 +201,7 @@ def cnn_skin_cancer_workflow():
         image=skin_cancer_container_image,
         name="compare-models",
         namespace="airflow",
-        env_vars=kwargs_env_data,
+        env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
         in_cluster=True,
         get_logs=True,
         do_xcom_push=True,
