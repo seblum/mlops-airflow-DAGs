@@ -4,27 +4,56 @@ from enum import Enum
 import mlflow
 import pendulum
 from airflow.decorators import dag, task
+from airflow.kubernetes.secret import Secret
+from airflow.models import Variable
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
+from kubernetes.client import models as k8s
 
-MLFLOW_TRACKING_URI_local = "http://127.0.0.1:5008/"
-MLFLOW_TRACKING_URI = "http://host.docker.internal:5008"
 EXPERIMENT_NAME = "cnn_skin_cancer"
-AWS_BUCKET = os.getenv("AWS_BUCKET")
-AWS_REGION = os.getenv("AWS_REGION")
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
+skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
+secret_name = "airflow-s3-data-bucket-access-credentials"
 
-mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_local)
+MLFLOW_TRACKING_URI = Variable.get("MLFLOW_TRACKING_URI")
+SECRET_AWS_BUCKET = Secret(deploy_type="env", deploy_target="AWS_BUCKET", secret=secret_name, key="AWS_BUCKET")
+SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret=secret_name, key="AWS_REGION")
+SECRET_AWS_ACCESS_KEY_ID = Secret(
+    deploy_type="env",
+    deploy_target="AWS_ACCESS_KEY_ID",
+    secret=secret_name,
+    key="AWS_ACCESS_KEY_ID",
+)
+SECRET_AWS_SECRET_ACCESS_KEY = Secret(
+    deploy_type="env",
+    deploy_target="AWS_SECRET_ACCESS_KEY",
+    secret=secret_name,
+    key="AWS_SECRET_ACCESS_KEY",
+)
+SECRET_AWS_ROLE_NAME = Secret(
+    deploy_type="env",
+    deploy_target="AWS_ROLE_NAME",
+    secret=secret_name,
+    key="AWS_ROLE_NAME",
+)
 
-try:
-    # Creating an experiment
-    mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
-except:
-    pass
-# Setting the environment with the created experiment
-mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
+
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+
+
+def make_mlflow() -> str:
+    try:
+        # Creating an experiment
+        mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
+    except:
+        pass
+    # Setting the environment with the created experiment
+    mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
+    return mlflow_experiment_id
+
+
+# when dag is loaded, mlflow experiment is created
+mlflow_experiment_id = make_mlflow()
+# mlflow_experiment_id = "234"
 
 
 class Model_Class(Enum):
@@ -37,22 +66,8 @@ class Model_Class(Enum):
 
 # Set various model params and airflow or environment args
 
-dag_default_args = {
-    "owner": "seblum",
-    "depends_on_past": False,
-    "start_date": pendulum.datetime(2021, 1, 1, tz="UTC"),
-    "tags": ["Keras CNN to classify skin cancer"],
-}
+tolerations = [k8s.V1Toleration(key="dedicated", operator="Equal", value="t3_medium_large", effect="NoSchedule")]
 
-kwargs_env_data = {
-    "MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI,
-    "MLFLOW_EXPERIMENT_ID": mlflow_experiment_id,
-    "AWS_ACCESS_KEY_ID": AWS_ACCESS_KEY_ID,
-    "AWS_SECRET_ACCESS_KEY": AWS_SECRET_ACCESS_KEY,
-    "AWS_BUCKET": AWS_BUCKET,
-    "AWS_REGION": AWS_REGION,
-    "AWS_ROLE_NAME": AWS_ROLE_NAME,
-}
 
 model_params = {
     "num_classes": 2,
@@ -71,25 +86,37 @@ model_params = {
     "verbose": 2,
 }
 
-skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
-
 
 @dag(
-    "cnn_skin_cancer_docker_workflow",
-    default_args=dag_default_args,
+    "cnn_skin_cancer_k8s_workflow",
+    default_args={
+        "owner": "seblum",
+        "depends_on_past": False,
+        "start_date": pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
+        "tags": ["Keras CNN to classify skin cancer"],
+    },
     schedule_interval=None,
     max_active_runs=1,
 )
 def cnn_skin_cancer_workflow():
-    @task.docker(
+    @task.kubernetes(
         image=skin_cancer_container_image,
-        multiple_outputs=True,
-        environment=kwargs_env_data,
-        working_dir="/app",
-        force_pull=True,
-        network_mode="bridge",
+        name="preprocessing",
+        namespace="airflow",
+        env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
+        in_cluster=True,
+        get_logs=True,
+        do_xcom_push=True,
+        # service_account_name="airflow-sa",
+        secrets=[
+            SECRET_AWS_BUCKET,
+            SECRET_AWS_REGION,
+            SECRET_AWS_ACCESS_KEY_ID,
+            SECRET_AWS_SECRET_ACCESS_KEY,
+            SECRET_AWS_ROLE_NAME,
+        ],
     )
-    def preprocessing_op(mlflow_experiment_id):
+    def preprocessing_op(mlflow_experiment_id: str) -> dict:
         """
         Perform data preprocessing.
 
@@ -101,9 +128,12 @@ def cnn_skin_cancer_workflow():
         """
         import os
 
-        from src.preprocessing import data_preprocessing
+        # import time
+        # time.sleep(60)
 
         aws_bucket = os.getenv("AWS_BUCKET")
+
+        from src.preprocessing import data_preprocessing
 
         (
             X_train_data_path,
@@ -121,15 +151,24 @@ def cnn_skin_cancer_workflow():
         }
         return return_dict
 
-    @task.docker(
+    @task.kubernetes(
         image=skin_cancer_container_image,
-        multiple_outputs=True,
-        environment=kwargs_env_data,
-        working_dir="/app",
-        force_pull=True,
-        network_mode="bridge",
+        namespace="airflow",
+        env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
+        in_cluster=True,
+        get_logs=True,
+        do_xcom_push=True,
+        startup_timeout_seconds=300,
+        tolerations=tolerations,
+        secrets=[
+            SECRET_AWS_BUCKET,
+            SECRET_AWS_REGION,
+            SECRET_AWS_ACCESS_KEY_ID,
+            SECRET_AWS_SECRET_ACCESS_KEY,
+            SECRET_AWS_ROLE_NAME,
+        ],
     )
-    def model_training_op(mlflow_experiment_id, model_class, model_params, input):
+    def model_training_op(mlflow_experiment_id: str, model_class: str, model_params: dict, input: dict) -> dict:
         """
         Train a model.
 
@@ -163,14 +202,23 @@ def cnn_skin_cancer_workflow():
         }
         return return_dict
 
-    @task.docker(
+    @task.kubernetes(
         image=skin_cancer_container_image,
-        multiple_outputs=True,
-        environment=kwargs_env_data,
-        force_pull=True,
-        network_mode="bridge",
+        name="compare-models",
+        namespace="airflow",
+        env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
+        in_cluster=True,
+        get_logs=True,
+        do_xcom_push=True,
+        secrets=[
+            SECRET_AWS_BUCKET,
+            SECRET_AWS_REGION,
+            SECRET_AWS_ACCESS_KEY_ID,
+            SECRET_AWS_SECRET_ACCESS_KEY,
+            SECRET_AWS_ROLE_NAME,
+        ],
     )
-    def compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval):
+    def compare_models_op(train_data_basic: dict, train_data_resnet50: dict, train_data_crossval: dict) -> dict:
         """
         Compare trained models.
 
