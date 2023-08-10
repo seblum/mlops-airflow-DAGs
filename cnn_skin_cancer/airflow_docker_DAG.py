@@ -15,6 +15,8 @@ AWS_REGION = os.getenv("AWS_REGION")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
+skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
+
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_local)
 
@@ -83,8 +85,6 @@ model_params = {
     "pooling": "avg",  # needed for resnet50
     "verbose": 2,
 }
-
-skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 
 
 @dag(
