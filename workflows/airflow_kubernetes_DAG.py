@@ -66,7 +66,8 @@ class Model_Class(Enum):
 
 # Set various model params and airflow or environment args
 
-tolerations = [k8s.V1Toleration(key="dedicated", operator="Equal", value="t3_medium_large")]
+tolerations = [k8s.V1Toleration(key="dedicated", operator="Equal", value="t3_medium_large", effect="NoSchedule")]
+
 
 model_params = {
     "num_classes": 2,
@@ -158,6 +159,8 @@ def cnn_skin_cancer_workflow():
         get_logs=True,
         do_xcom_push=True,
         startup_timeout_seconds=300,
+        # affinity=affinity,
+        node_selectors=node_selector,
         tolerations=tolerations,
         secrets=[
             SECRET_AWS_BUCKET,
