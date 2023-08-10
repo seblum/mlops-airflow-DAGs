@@ -155,6 +155,7 @@ def cnn_skin_cancer_workflow():
         in_cluster=True,
         get_logs=True,
         do_xcom_push=True,
+        startup_timeout_seconds=300,
         secrets=[
             SECRET_AWS_BUCKET,
             SECRET_AWS_REGION,
