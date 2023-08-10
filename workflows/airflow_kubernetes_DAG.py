@@ -8,6 +8,7 @@ from airflow.kubernetes.secret import Secret
 from airflow.models import Variable
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
+from kubernetes.client import models as k8s
 
 EXPERIMENT_NAME = "cnn_skin_cancer"
 skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
@@ -65,6 +66,7 @@ class Model_Class(Enum):
 
 # Set various model params and airflow or environment args
 
+tolerations = [k8s.V1Toleration(key="dedicated", operator="Equal", value="t3_medium_large")]
 
 model_params = {
     "num_classes": 2,
@@ -156,6 +158,7 @@ def cnn_skin_cancer_workflow():
         get_logs=True,
         do_xcom_push=True,
         startup_timeout_seconds=300,
+        tolerations=tolerations,
         secrets=[
             SECRET_AWS_BUCKET,
             SECRET_AWS_REGION,
