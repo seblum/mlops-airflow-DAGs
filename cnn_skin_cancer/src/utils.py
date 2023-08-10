@@ -81,13 +81,18 @@ class AWSSession:
         Raises:
             None
         """
+        print("_get_role_access")
+        print(self.__region_name)
         sts = session.client("sts", region_name=self.__region_name)
+        print(sts)
         account_id = sts.get_caller_identity()["Account"]
+        print(account_id)
         # https://www.learnaws.org/2022/09/30/aws-boto3-assume-role/
         response = sts.assume_role(
             RoleArn=f"arn:aws:iam::{account_id}:role/{self.__aws_role_name}",
             RoleSessionName=f"{self.__aws_role_name}-session",
         )
+        print(response)
         return (
             response["Credentials"]["AccessKeyId"],
             response["Credentials"]["SecretAccessKey"],
@@ -107,6 +112,11 @@ class AWSSession:
         Raises:
             None
         """
+        print("set_sessions")
+        print(self.__aws_access_key_id)
+        print(self.__aws_secret_access_key)
+        print(self.__aws_role_name)
+        print(self.__region_name)
         user_session = boto3.Session(
             region_name=self.__region_name,
             aws_access_key_id=self.__aws_access_key_id,
@@ -129,6 +139,16 @@ class AWSSession:
             token=tmp_aws_session_token,
             anon=False,
         )
+        print("credentials")
+        print(tmp_aws_access_key_id)
+        print(tmp_aws_secret_access_key)
+        print(tmp_aws_session_token)
+        print("sessiontest")
+        print("__boto3_role_session")
+        print(self.__boto3_role_session)
+        print("__s3fs_session")
+        print(self.__s3fs_session)
+        # print(self.__s3fs_session.ls("s3://airflowdatabucket/data/train/benign"))
 
     # def get_sessions(self) -> Tuple[Session, Session]:
     #     return self.boto3_role_session, self.s3fs_session
@@ -205,4 +225,6 @@ class AWSSession:
         Raises:
             None
         """
+        print("list_files_in_bucket")
+        print(self.__s3fs_session)
         return self.__s3fs_session.ls(path)
