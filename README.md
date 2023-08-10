@@ -37,7 +37,7 @@ Contributions to this repository are welcome! If you have any improvements, bug 
 
 ##  License
 
-This repository is licensed under the MIT License. Feel free to use and modify the code as per your needs.
+This repository is licensed under the Apache License. Feel free to use and modify the code as per your needs.
 
 This project is related to the Bookdown Book [MLOps Engineering](https://github.com/seblum/mlops-engineering-book) and the ML platform based on Airflow & MLflow of [this project](https://github.com/seblum/mlops-airflow-on-eks).
 
