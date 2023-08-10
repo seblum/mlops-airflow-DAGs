@@ -10,11 +10,18 @@ from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 from kubernetes.client import models as k8s
 
-EXPERIMENT_NAME = "cnn_skin_cancer"
-skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
-secret_name = "airflow-s3-data-bucket-access-credentials"
+##### SET VARIOUS parameters
+#
 
+# mlflow parameters
+EXPERIMENT_NAME = "cnn_skin_cancer"
 MLFLOW_TRACKING_URI = Variable.get("MLFLOW_TRACKING_URI")
+
+# base image for k8s pods
+skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
+
+# secrets to pass on to k8s pod
+secret_name = "airflow-s3-data-bucket-access-credentials"
 SECRET_AWS_BUCKET = Secret(deploy_type="env", deploy_target="AWS_BUCKET", secret=secret_name, key="AWS_BUCKET")
 SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret=secret_name, key="AWS_REGION")
 SECRET_AWS_ACCESS_KEY_ID = Secret(
@@ -36,7 +43,41 @@ SECRET_AWS_ROLE_NAME = Secret(
     key="AWS_ROLE_NAME",
 )
 
+# node_selector and toleration to schedule model training on specific nodes
+tolerations = [k8s.V1Toleration(key="dedicated", operator="Equal", value="t3_large", effect="NoSchedule")]
+node_selector = {"role": "t3_large"}
 
+
+# Enum Class to distiguish models
+class Model_Class(Enum):
+    """This enum includes different models."""
+
+    Basic = "Basic"
+    CrossVal = "CrossVal"
+    ResNet50 = "ResNet50"
+
+
+# Set various model params
+model_params = {
+    "num_classes": 2,
+    "input_shape": (224, 224, 3),
+    "activation": "relu",
+    "kernel_initializer_glob": "glorot_uniform",
+    "kernel_initializer_norm": "normal",
+    "optimizer": "adam",
+    "loss": "binary_crossentropy",
+    "metrics": ["accuracy"],
+    "validation_split": 0.2,
+    "epochs": 2,
+    "batch_size": 64,
+    "learning_rate": 1e-5,
+    "pooling": "avg",  # needed for resnet50
+    "verbose": 2,
+}
+
+
+##### SET MLFLOW
+#
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 
@@ -56,37 +97,8 @@ mlflow_experiment_id = make_mlflow()
 # mlflow_experiment_id = "234"
 
 
-class Model_Class(Enum):
-    """This enum includes different models."""
-
-    Basic = "Basic"
-    CrossVal = "CrossVal"
-    ResNet50 = "ResNet50"
-
-
-# Set various model params and airflow or environment args
-
-tolerations = [k8s.V1Toleration(key="dedicated", operator="Equal", value="t3_large", effect="NoSchedule")]
-node_selector = {"role": "t3_large"}
-
-model_params = {
-    "num_classes": 2,
-    "input_shape": (224, 224, 3),
-    "activation": "relu",
-    "kernel_initializer_glob": "glorot_uniform",
-    "kernel_initializer_norm": "normal",
-    "optimizer": "adam",
-    "loss": "binary_crossentropy",
-    "metrics": ["accuracy"],
-    "validation_split": 0.2,
-    "epochs": 2,
-    "batch_size": 64,
-    "learning_rate": 1e-5,
-    "pooling": "avg",  # needed for resnet50
-    "verbose": 2,
-}
-
-
+##### AIRFLOW DAG
+#
 @dag(
     "cnn_skin_cancer_k8s_workflow",
     default_args={
