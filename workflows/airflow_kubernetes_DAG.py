@@ -159,8 +159,6 @@ def cnn_skin_cancer_workflow():
         get_logs=True,
         do_xcom_push=True,
         startup_timeout_seconds=300,
-        # affinity=affinity,
-        node_selectors=node_selector,
         tolerations=tolerations,
         secrets=[
             SECRET_AWS_BUCKET,
