@@ -18,13 +18,26 @@ AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_local)
 
-try:
-    # Creating an experiment
-    mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
-except:
-    pass
-# Setting the environment with the created experiment
-mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
+
+def make_mlflow() -> str:
+    try:
+        # Creating an experiment
+        mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
+    except:
+        pass
+    # Setting the environment with the created experiment
+    mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
+    return mlflow_experiment_id
+
+
+# when dag is loaded, mlflow experiment is created
+# COMMENTED FOR DOCKER TO SHOW IN WEBSERVER
+# mlflow_experiment_id = make_mlflow()
+
+
+# when dag is loaded, mlflow experiment is created
+mlflow_experiment_id = make_mlflow()
+# mlflow_experiment_id = "234"
 
 
 class Model_Class(Enum):
