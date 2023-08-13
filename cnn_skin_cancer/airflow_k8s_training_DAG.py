@@ -110,7 +110,7 @@ mlflow_experiment_id = make_mlflow()
     schedule_interval=None,
     max_active_runs=1,
 )
-def cnn_skin_cancer_workflow():
+def cnn_skin_cancer_training():
     @task.kubernetes(
         image=skin_cancer_container_image,
         name="preprocessing",
@@ -300,4 +300,4 @@ def cnn_skin_cancer_workflow():
     # compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
 
 
-cnn_skin_cancer_workflow()
+cnn_skin_cancer_training()
