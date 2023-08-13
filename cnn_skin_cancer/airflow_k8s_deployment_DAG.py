@@ -1,22 +1,50 @@
-# import pendulum
-# from airflow.decorators import dag, task
-# from airflow.operators.bash import BashOperator
+import pendulum
+from airflow.decorators import dag, task
+from airflow.operators.bash import BashOperator
+from airflow.operators.sensors import ExternalTaskSensor
+
+##### AIRFLOW DAG
+#
+@dag(
+    "cnn_skin_cancer_training_pipeline",
+    default_args={
+        "owner": "seblum",
+        "depends_on_past": False,
+        "start_date": pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
+        "tags": ["Keras CNN to classify skin cancer"],
+    },
+    schedule_interval=None,
+    max_active_runs=1,
+)
+def cnn_skin_cancer_deployment():
+    trigger_deploy = ExternalTaskSensor(
+        task_id='trigger_deploy',
+        external_dag_id='cnn_skin_cancer_training_pipeline',
+        external_task_id='compare-models',
+        start_date=pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
+        # execution_delta=timedelta(hours=1),
+        timeout=3600,
+    )
 
 
-# ##### AIRFLOW DAG
-# #
-# @dag(
-#     "cnn_skin_cancer_training_pipeline",
-#     default_args={
-#         "owner": "seblum",
-#         "depends_on_past": False,
-#         "start_date": pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
-#         "tags": ["Keras CNN to classify skin cancer"],
-#     },
-#     schedule_interval=None,
-#     max_active_runs=1,
-# )
-# def cnn_skin_cancer_workflow():
+    @task(
+        name="deploy_model",
+        namespace="seldon-core",
+        # env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
+        # in_cluster=True,
+        # get_logs=True,
+        # do_xcom_push=True,
+        startup_timeout_seconds=300,
+        # service_account_name="airflow-sa",
+    )
+    def deploy_model() -> dict:
+        # set yaml
+        # kubectl yaml
+        pass
+
+    trigger_deploy >> deploy_model
+
+
 #     @task.kubernetes(
 #         image=skin_cancer_container_image,
 #         name="preprocessing",
@@ -81,4 +109,4 @@
 #     # compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
 
 
-# cnn_skin_cancer_workflow()
+cnn_skin_cancer_deployment()
