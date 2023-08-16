@@ -28,6 +28,13 @@ def cnn_skin_cancer_deployment():
         # timeout=3600,
     )
 
+    @task(task_id="print_the_context")
+    def print_context(ds=None, **kwargs):
+        """Print the Airflow context and ds variable from the context."""
+        pprint(kwargs)
+        print(ds)
+        return "Whatever you return gets printed in the logs"
+
     @task(
         name="deploy_model",
         # namespace="seldon-core",
@@ -43,8 +50,10 @@ def cnn_skin_cancer_deployment():
         # kubectl yaml
         pass
 
-    trigger_deploy
-    deploy_model
+    trigger_deploy >> print_context
+
+    run_this = print_context()
+
     #     @task.kubernetes(
     #         image=skin_cancer_container_image,
     #         name="preprocessing",
