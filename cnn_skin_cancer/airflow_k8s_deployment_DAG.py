@@ -23,7 +23,7 @@ def cnn_skin_cancer_deployment():
         task_id="trigger_deploy",
         external_dag_id="cnn_skin_cancer_training_pipeline",
         external_task_id="compare-models",
-        start_date=pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
+        # start_date=pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
         # execution_delta=timedelta(hours=1),
         # timeout=3600,
     )
