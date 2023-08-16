@@ -2,7 +2,7 @@ import pendulum
 import yaml
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
-from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.sensors.external_task_sensor import ExternalTaskSensor
 
 
 ##### AIRFLOW DAG
@@ -43,7 +43,7 @@ def cnn_skin_cancer_deployment():
         # kubectl yaml
         pass
 
-    trigger_deploy >> deploy_model
+    # trigger_deploy >> deploy_model
 
     #     @task.kubernetes(
     #         image=skin_cancer_container_image,
