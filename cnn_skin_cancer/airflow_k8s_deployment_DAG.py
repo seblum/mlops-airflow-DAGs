@@ -20,8 +20,9 @@ from airflow.sensors.external_task_sensor import ExternalTaskSensor
     max_active_runs=1,
 )
 def cnn_skin_cancer_deployment():
+
     trigger_deploy = ExternalTaskSensor(
-        task_id="trigger_deploy",
+        task_id="external_trigger_deploy",
         external_dag_id="cnn_skin_cancer_training_pipeline",
         external_task_id="compare-models",
         # start_date=pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
