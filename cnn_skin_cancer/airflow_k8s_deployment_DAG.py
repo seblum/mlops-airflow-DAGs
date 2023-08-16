@@ -10,7 +10,7 @@ from kubernetes import client, config
 ##### AIRFLOW DAG
 #
 @dag(
-    "cnn_skin_cancer_deployment_pipeline",
+    dag_id="cnn_skin_cancer_deployment_pipeline",
     default_args={
         "owner": "seblum",
         "depends_on_past": False,
@@ -25,7 +25,7 @@ def cnn_skin_cancer_deployment():
     trigger_deploy = ExternalTaskSensor(
         task_id="external_trigger_deploy",
         external_dag_id="cnn_skin_cancer_training_pipeline",
-        external_task_id="compare-models",
+        external_task_id="compare-models-op",
         # start_date=pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
         # execution_delta=timedelta(hours=1),
         # timeout=3600,

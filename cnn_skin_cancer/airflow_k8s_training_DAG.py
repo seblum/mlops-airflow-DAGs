@@ -100,7 +100,7 @@ mlflow_experiment_id = make_mlflow()
 ##### AIRFLOW DAG
 #
 @dag(
-    "cnn_skin_cancer_training_pipeline",
+    dag_id="cnn_skin_cancer_training_pipeline",
     default_args={
         "owner": "seblum",
         "depends_on_past": False,
@@ -219,6 +219,7 @@ def cnn_skin_cancer_training():
     @task.kubernetes(
         image=skin_cancer_container_image,
         name="compare-models",
+        task_id="compare-models-op",
         namespace="airflow",
         env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
         in_cluster=True,
