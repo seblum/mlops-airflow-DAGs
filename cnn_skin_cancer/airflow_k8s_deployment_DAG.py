@@ -25,12 +25,12 @@ def cnn_skin_cancer_deployment():
         external_task_id="compare-models",
         start_date=pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
         # execution_delta=timedelta(hours=1),
-        timeout=3600,
+        # timeout=3600,
     )
 
     @task(
         name="deploy_model",
-        namespace="seldon-core",
+        # namespace="seldon-core",
         # env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
         # in_cluster=True,
         # get_logs=True,
