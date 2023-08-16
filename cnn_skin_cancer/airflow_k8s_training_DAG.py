@@ -113,7 +113,7 @@ mlflow_experiment_id = make_mlflow()
 def cnn_skin_cancer_training():
     @task.kubernetes(
         image=skin_cancer_container_image,
-        name="preprocessing",
+        task_id="preprocessing_op",
         namespace="airflow",
         env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
         in_cluster=True,
@@ -166,6 +166,7 @@ def cnn_skin_cancer_training():
 
     @task.kubernetes(
         image=skin_cancer_container_image,
+        task_id="model_training_op",
         namespace="airflow",
         env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
         in_cluster=True,
@@ -218,8 +219,7 @@ def cnn_skin_cancer_training():
 
     @task.kubernetes(
         image=skin_cancer_container_image,
-        name="compare-models",
-        task_id="compare-models-op",
+        task_id="compare_models_op",
         namespace="airflow",
         env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
         in_cluster=True,

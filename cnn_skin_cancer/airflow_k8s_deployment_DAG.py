@@ -23,9 +23,9 @@ from kubernetes import client, config
 def cnn_skin_cancer_deployment():
 
     trigger_deploy = ExternalTaskSensor(
-        task_id="external_trigger_deploy",
+        task_id="external_trigger_deploy_op",
         external_dag_id="cnn_skin_cancer_training_pipeline",
-        external_task_id="compare-models-op",
+        external_task_id="compare_models_op",
         # start_date=pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
         # execution_delta=timedelta(hours=1),
         # timeout=3600,
@@ -67,7 +67,7 @@ def cnn_skin_cancer_deployment():
         resp = k8s_apps_v1.create_namespaced_deployment(body=seldon_deployment_yaml, namespace="default")
         print("Deployment created. status='%s'" % resp.metadata.name)
 
-    seldon_deployment = PythonOperator(task_id="some_task", python_callable=seldon_deployment_func)
+    seldon_deployment = PythonOperator(task_id="seldon_deployment_op", python_callable=seldon_deployment_func)
 
     trigger_deploy >> seldon_deployment
 
