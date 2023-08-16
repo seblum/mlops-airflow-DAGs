@@ -4,6 +4,7 @@ from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 from airflow.sensors.external_task_sensor import ExternalTaskSensor
+from kubernetes import client, config
 
 
 ##### AIRFLOW DAG
@@ -30,130 +31,45 @@ def cnn_skin_cancer_deployment():
         # timeout=3600,
     )
 
-    def my_processing_func(**kwargs):
-        print("I have sensed the task is complete in a dag")
+    def seldon_deployment_func(**kwargs):
+        seldon_deployment_dict = {
+            "apiVersion": "machinelearning.seldon.io/v1alpha2",
+            "kind": "SeldonDeployment",
+            "metadata": {"name": "mlflow", "namespace": "seldon-system"},
+            "spec": {
+                "protocol": "v2",
+                "name": "wines",
+                "predictors": [
+                    {
+                        "graph": {
+                            "children": [],
+                            "implementation": "MLFLOW_SERVER",
+                            "modelUri": "s3://d7k27cmkytac-mlflow-artifact-bucket/test/elasticnet_wine_44eb4bd043964a34be556172a710bc18",
+                            "name": "classifier",
+                        },
+                        "name": "default",
+                        "replicas": 1,
+                    }
+                ],
+            },
+        }
 
-    some_task = PythonOperator(task_id="some_task", python_callable=my_processing_func)
+        print("The python dictionary is:")
+        print(seldon_deployment_dict)
+        seldon_deployment_yaml = yaml.dump(seldon_deployment)
+        print("The YAML string is:")
+        print(seldon_deployment_yaml)
 
-    # @task(task_id="print_the_context")
-    # def print_context(ds=None, **kwargs):
-    #     """Print the Airflow context and ds variable from the context."""
-    #     print(kwargs)
-    #     print(ds)
-    #     return "Whatever you return gets printed in the logs"
+        print("loading config...")
+        config.load_kube_config()
 
-    @task(
-        name="deploy_model_zwei",
-        # namespace="seldon-core",
-        # env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
-        # in_cluster=True,
-        # get_logs=True,
-        # do_xcom_push=True,
-        # startup_timeout_seconds=300,
-        # service_account_name="airflow-sa",
-    )
-    def deploy_model():
-        # set yaml
-        # kubectl yaml
-        print("yolo")
+        k8s_apps_v1 = client.AppsV1Api()
+        resp = k8s_apps_v1.create_namespaced_deployment(body=seldon_deployment_yaml, namespace="default")
+        print("Deployment created. status='%s'" % resp.metadata.name)
 
-    trigger_deploy >> some_task
+    seldon_deployment = PythonOperator(task_id="some_task", python_callable=seldon_deployment_func)
 
-    # trigger_deploy >> deploy_model()
-    # run_this = print_context()
-
-    #     @task.kubernetes(
-    #         image=skin_cancer_container_image,
-    #         name="preprocessing",
-    #         namespace="airflow",
-    #         env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
-    #         in_cluster=True,
-    #         get_logs=True,
-    #         do_xcom_push=True,
-    #         startup_timeout_seconds=300,
-    #         # service_account_name="airflow-sa",
-    #         secrets=[
-    #             SECRET_AWS_BUCKET,
-    #             SECRET_AWS_REGION,
-    #             SECRET_AWS_ACCESS_KEY_ID,
-    #             SECRET_AWS_SECRET_ACCESS_KEY,
-    #             SECRET_AWS_ROLE_NAME,
-    #         ],
-    #     )
-    #     def deployment_op(mlflow_experiment_id: str) -> dict:
-    #         """
-    #         Perform data preprocessing.
-
-    #         Args:
-    #             mlflow_experiment_id (str): The MLflow experiment ID.
-
-    #         Returns:
-    #             dict: A dictionary containing the paths to preprocessed data.
-    #         """
-    #         import os
-
-    #         # import time
-    #         # time.sleep(60)
-
-    #         aws_bucket = os.getenv("AWS_BUCKET")
-
-    #         from src.preprocessing import data_preprocessing
-
-    #         (
-    #             X_train_data_path,
-    #             y_train_data_path,
-    #             X_test_data_path,
-    #             y_test_data_path,
-    #         ) = data_preprocessing(mlflow_experiment_id=mlflow_experiment_id, aws_bucket=aws_bucket)
-
-    #         # Create dictionary with S3 paths to return
-    #         return_dict = {
-    #             "X_train_data_path": X_train_data_path,
-    #             "y_train_data_path": y_train_data_path,
-    #             "X_test_data_path": X_test_data_path,
-    #             "y_test_data_path": y_test_data_path,
-    #         }
-    #         return return_dict
-
-    #     # serve_streamlit_app_op = BashOperator(
-    #     #     task_id="streamlit-inference-app",
-    #     #     bash_command='docker run --detach -p 8501:8501 -it seblum/model-serving:streamlit-inference-app && echo "streamlit-inference running"',
-    #     # )
-
-    #     # CREATE PIPELINE
-
-    #     deployment_op()
-    #     # compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
-
-    # cnn_skin_cancer_workflow()
-
-    # seldon_deployment = {
-    #     "apiVersion": "machinelearning.seldon.io/v1alpha2",
-    #     "kind": "SeldonDeployment",
-    #     "metadata": {"name": "mlflow", "namespace": "seldon-system"},
-    #     "spec": {
-    #         "protocol": "v2",
-    #         "name": "wines",
-    #         "predictors": [
-    #             {
-    #                 "graph": {
-    #                     "children": [],
-    #                     "implementation": "MLFLOW_SERVER",
-    #                     "modelUri": "s3://d7k27cmkytac-mlflow-artifact-bucket/test/elasticnet_wine_44eb4bd043964a34be556172a710bc18",
-    #                     "name": "classifier",
-    #                 },
-    #                 "name": "default",
-    #                 "replicas": 1,
-    #             }
-    #         ],
-    #     },
-    # }
-
-    # print("The python dictionary is:")
-    # print(seldon_deployment)
-    # yaml_string = yaml.dump(seldon_deployment)
-    # print("The YAML string is:")
-    # print(yaml_string)
+    trigger_deploy >> seldon_deployment
 
 
 cnn_skin_cancer_deployment()
