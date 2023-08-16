@@ -2,6 +2,7 @@ import pendulum
 import yaml
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
 from airflow.sensors.external_task_sensor import ExternalTaskSensor
 
 
@@ -28,31 +29,36 @@ def cnn_skin_cancer_deployment():
         # timeout=3600,
     )
 
-    @task(task_id="print_the_context")
-    def print_context(ds=None, **kwargs):
-        """Print the Airflow context and ds variable from the context."""
-        pprint(kwargs)
-        print(ds)
-        return "Whatever you return gets printed in the logs"
+    def my_processing_func(**kwargs):
+        print("I have sensed the task is complete in a dag")
 
-    @task(
-        name="deploy_model",
-        # namespace="seldon-core",
-        # env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
-        # in_cluster=True,
-        # get_logs=True,
-        # do_xcom_push=True,
-        # startup_timeout_seconds=300,
-        # service_account_name="airflow-sa",
-    )
-    def deploy_model():
-        # set yaml
-        # kubectl yaml
-        pass
+    some_task = PythonOperator(task_id="some_task", python_callable=my_processing_func, dag=dag)
 
-    trigger_deploy >> print_context
+    # @task(task_id="print_the_context")
+    # def print_context(ds=None, **kwargs):
+    #     """Print the Airflow context and ds variable from the context."""
+    #     print(kwargs)
+    #     print(ds)
+    #     return "Whatever you return gets printed in the logs"
 
-    run_this = print_context()
+    # @task(
+    #     name="deploy_model",
+    #     # namespace="seldon-core",
+    #     # env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
+    #     # in_cluster=True,
+    #     # get_logs=True,
+    #     # do_xcom_push=True,
+    #     # startup_timeout_seconds=300,
+    #     # service_account_name="airflow-sa",
+    # )
+    # def deploy_model():
+    #     # set yaml
+    #     # kubectl yaml
+    #     pass
+
+    trigger_deploy >> some_task
+
+    # run_this = print_context()
 
     #     @task.kubernetes(
     #         image=skin_cancer_container_image,
