@@ -35,7 +35,7 @@ def cnn_skin_cancer_deployment():
         # in_cluster=True,
         # get_logs=True,
         # do_xcom_push=True,
-        startup_timeout_seconds=300,
+        # startup_timeout_seconds=300,
         # service_account_name="airflow-sa",
     )
     def deploy_model() -> dict:
@@ -43,7 +43,7 @@ def cnn_skin_cancer_deployment():
         # kubectl yaml
         pass
 
-    # trigger_deploy >> deploy_model
+    trigger_deploy >> deploy_model
 
     #     @task.kubernetes(
     #         image=skin_cancer_container_image,
