@@ -38,13 +38,13 @@ def cnn_skin_cancer_deployment():
         # startup_timeout_seconds=300,
         # service_account_name="airflow-sa",
     )
-    def deploy_model() -> dict:
+    def deploy_model():
         # set yaml
         # kubectl yaml
         pass
 
-    trigger_deploy >> deploy_model
-
+    deploy_model = trigger_deploy()
+    deploy_model
     #     @task.kubernetes(
     #         image=skin_cancer_container_image,
     #         name="preprocessing",
