@@ -42,23 +42,24 @@ def cnn_skin_cancer_deployment():
     #     print(ds)
     #     return "Whatever you return gets printed in the logs"
 
-    # @task(
-    #     name="deploy_model",
-    #     # namespace="seldon-core",
-    #     # env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
-    #     # in_cluster=True,
-    #     # get_logs=True,
-    #     # do_xcom_push=True,
-    #     # startup_timeout_seconds=300,
-    #     # service_account_name="airflow-sa",
-    # )
-    # def deploy_model():
-    #     # set yaml
-    #     # kubectl yaml
-    #     pass
+    @task(
+        name="deploy_model",
+        # namespace="seldon-core",
+        # env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
+        # in_cluster=True,
+        # get_logs=True,
+        # do_xcom_push=True,
+        # startup_timeout_seconds=300,
+        # service_account_name="airflow-sa",
+    )
+    def deploy_model():
+        # set yaml
+        # kubectl yaml
+        print("yolo")
 
     trigger_deploy >> some_task
 
+    trigger_deploy >> deploy_model
     # run_this = print_context()
 
     #     @task.kubernetes(
