@@ -43,7 +43,7 @@ def cnn_skin_cancer_deployment():
     #     return "Whatever you return gets printed in the logs"
 
     @task(
-        name="deploy_model",
+        name="deploy_model_zwei",
         # namespace="seldon-core",
         # env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
         # in_cluster=True,
