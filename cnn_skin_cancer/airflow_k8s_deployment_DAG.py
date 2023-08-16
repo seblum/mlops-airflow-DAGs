@@ -8,7 +8,7 @@ from airflow.sensors.external_task_sensor import ExternalTaskSensor
 ##### AIRFLOW DAG
 #
 @dag(
-    "cnn_skin_cancer_training_pipeline",
+    "cnn_skin_cancer_deployment_pipeline",
     default_args={
         "owner": "seblum",
         "depends_on_past": False,
