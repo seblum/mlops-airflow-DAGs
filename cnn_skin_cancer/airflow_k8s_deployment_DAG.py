@@ -22,14 +22,14 @@ from kubernetes import client, config
 )
 def cnn_skin_cancer_deployment():
 
-    trigger_deploy = ExternalTaskSensor(
-        task_id="external_trigger_deploy_op",
-        external_dag_id="cnn_skin_cancer_training_pipeline",
-        external_task_id="compare_models_op",
-        # start_date=pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
-        # execution_delta=timedelta(hours=1),
-        # timeout=3600,
-    )
+    # trigger_deploy = ExternalTaskSensor(
+    #     task_id="external_trigger_deploy_op",
+    #     external_dag_id="cnn_skin_cancer_training_pipeline",
+    #     external_task_id="compare_models_op",
+    #     # start_date=pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
+    #     # execution_delta=timedelta(hours=1),
+    #     # timeout=3600,
+    # )
 
     def seldon_deployment_func(**kwargs):
         seldon_deployment_dict = {
@@ -69,7 +69,8 @@ def cnn_skin_cancer_deployment():
 
     seldon_deployment = PythonOperator(task_id="seldon_deployment_op", python_callable=seldon_deployment_func)
 
-    trigger_deploy >> seldon_deployment
+    # trigger_deploy >> seldon_deployment
+    seldon_deployment
 
 
 cnn_skin_cancer_deployment()
