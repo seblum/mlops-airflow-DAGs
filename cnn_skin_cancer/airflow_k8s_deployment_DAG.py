@@ -110,33 +110,33 @@ def cnn_skin_cancer_deployment():
 
     # cnn_skin_cancer_workflow()
 
-    seldon_deployment = {
-        "apiVersion": "machinelearning.seldon.io/v1alpha2",
-        "kind": "SeldonDeployment",
-        "metadata": {"name": "mlflow", "namespace": "seldon-system"},
-        "spec": {
-            "protocol": "v2",
-            "name": "wines",
-            "predictors": [
-                {
-                    "graph": {
-                        "children": [],
-                        "implementation": "MLFLOW_SERVER",
-                        "modelUri": "s3://d7k27cmkytac-mlflow-artifact-bucket/test/elasticnet_wine_44eb4bd043964a34be556172a710bc18",
-                        "name": "classifier",
-                    },
-                    "name": "default",
-                    "replicas": 1,
-                }
-            ],
-        },
-    }
+    # seldon_deployment = {
+    #     "apiVersion": "machinelearning.seldon.io/v1alpha2",
+    #     "kind": "SeldonDeployment",
+    #     "metadata": {"name": "mlflow", "namespace": "seldon-system"},
+    #     "spec": {
+    #         "protocol": "v2",
+    #         "name": "wines",
+    #         "predictors": [
+    #             {
+    #                 "graph": {
+    #                     "children": [],
+    #                     "implementation": "MLFLOW_SERVER",
+    #                     "modelUri": "s3://d7k27cmkytac-mlflow-artifact-bucket/test/elasticnet_wine_44eb4bd043964a34be556172a710bc18",
+    #                     "name": "classifier",
+    #                 },
+    #                 "name": "default",
+    #                 "replicas": 1,
+    #             }
+    #         ],
+    #     },
+    # }
 
-    print("The python dictionary is:")
-    print(seldon_deployment)
-    yaml_string = yaml.dump(seldon_deployment)
-    print("The YAML string is:")
-    print(yaml_string)
+    # print("The python dictionary is:")
+    # print(seldon_deployment)
+    # yaml_string = yaml.dump(seldon_deployment)
+    # print("The YAML string is:")
+    # print(yaml_string)
 
 
 cnn_skin_cancer_deployment()
