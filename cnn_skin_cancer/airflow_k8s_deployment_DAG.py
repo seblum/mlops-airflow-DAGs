@@ -33,7 +33,7 @@ def cnn_skin_cancer_deployment():
     def my_processing_func(**kwargs):
         print("I have sensed the task is complete in a dag")
 
-    some_task = PythonOperator(task_id="some_task", python_callable=my_processing_func, dag=dag)
+    some_task = PythonOperator(task_id="some_task", python_callable=my_processing_func)
 
     # @task(task_id="print_the_context")
     # def print_context(ds=None, **kwargs):
