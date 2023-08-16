@@ -43,7 +43,7 @@ def cnn_skin_cancer_deployment():
         # kubectl yaml
         pass
 
-    deploy_model = trigger_deploy()
+    trigger_deploy
     deploy_model
     #     @task.kubernetes(
     #         image=skin_cancer_container_image,
