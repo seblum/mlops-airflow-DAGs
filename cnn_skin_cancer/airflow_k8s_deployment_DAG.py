@@ -59,7 +59,7 @@ def cnn_skin_cancer_deployment():
 
     trigger_deploy >> some_task
 
-    trigger_deploy >> deploy_model
+    trigger_deploy >> deploy_model()
     # run_this = print_context()
 
     #     @task.kubernetes(
