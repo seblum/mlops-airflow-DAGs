@@ -2,7 +2,7 @@ import pendulum
 import yaml
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
-from airflow.operators.sensors.external_task_sensor import ExternalTaskSensor
+from airflow.sensors import ExternalTaskSensor
 
 
 ##### AIRFLOW DAG
