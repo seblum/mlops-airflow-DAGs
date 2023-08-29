@@ -73,13 +73,14 @@ print("Application status is {}".format(check_status(app_name)))
 # print(query_input)
 
 
-file = open(
-    "/Users/sebastian.blum/Documents/Personal/mlops-airflow-DAGs/cnn_skin_cancer/images/inferencing/1003.jpg", "r"
-)
+# file = open(
+#     "/Users/sebastian.blum/Documents/Personal/mlops-airflow-DAGs/cnn_skin_cancer/images/inferencing/1.jpg",
+#     "r",
+# )
 # print(file)
 # print(type(file))
 
-file = "/Users/sebastian.blum/Documents/Personal/mlops-airflow-DAGs/cnn_skin_cancer/images/inferencing/1003.jpg"
+file = "/Users/sebastian.blum/Documents/Personal/mlops-airflow-DAGs/cnn_skin_cancer/images/inferencing/1.jpg"
 
 
 image = _read_imagefile(file)

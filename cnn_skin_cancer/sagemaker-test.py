@@ -8,9 +8,11 @@ from mlflow import MlflowClient
 
 MLFLOW_TRACKING_URI_local = "http://127.0.0.1:5007/"
 tag_id = "2.4.1"
+tag_id = "v2.3.2"
 region_name = "eu-central-1"
 aws_id = "855372857567"
 role_name = "test-role-sagemaker"
+role_name = "sagemaker-access-role"
 
 model_name = "Basic"
 experiment_name = "cnn_skin_cancer"
@@ -18,30 +20,42 @@ experiment_name = "cnn_skin_cancer"
 instance_type = "ml.t2.large"
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_local)
 
+repository_name = "mlflow-pyfunc"
+repository_name = "mlflow-sagemaker-deployment"
+model_version = 6
+
 # Get model information
 
-experiment_id = dict(mlflow.get_experiment_by_name(experiment_name))["experiment_id"]
 
-client = mlflow.MlflowClient()
-model_version_details = client.get_model_version(
-    name=model_name,
-    version="6",
+def get_mlflow_parameters(experiment_name: str, model_name: str, model_version: str) -> (str, str, str):
+    experiment_id = dict(mlflow.get_experiment_by_name(experiment_name))["experiment_id"]
+
+    client = mlflow.MlflowClient()
+    model_version_details = client.get_model_version(
+        name=model_name,
+        version=model_version,
+    )
+
+    # print(model_version_details)
+    run_id = model_version_details.run_id
+    source = model_version_details.source
+
+    return experiment_id, run_id, source
+
+
+experiment_id, run_id, source = get_mlflow_parameters(
+    experiment_name=experiment_name, model_name=model_name, model_version=model_version
 )
-
-# print(model_version_details)
-run_id = model_version_details.run_id
-source = model_version_details.source
 
 print(f"experiment_id:  {experiment_id}")
 print(f"run_id:         {run_id}")
 print(f"source:         {source}")
 
-
 # deploy to sagemaker
 
 # URL of the ECR-hosted Docker image the model should be deployed into
 image_url = "<YOUR mlflow-pyfunc ECR IMAGE URI>"
-image_url = f"{aws_id}.dkr.ecr.{region_name}.amazonaws.com/mlflow-pyfunc:{tag_id}"
+image_url = f"{aws_id}.dkr.ecr.{region_name}.amazonaws.com/{repository_name}:{tag_id}"
 
 # The location, in URI format, of the MLflow model to deploy to SageMaker.
 model_uri = "<YOUR MLFLOW MODEL LOCATION>"
