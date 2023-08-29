@@ -15,15 +15,30 @@ from kubernetes.client import models as k8s
 
 # mlflow parameters
 EXPERIMENT_NAME = "cnn_skin_cancer"
+
 MLFLOW_TRACKING_URI = Variable.get("MLFLOW_TRACKING_URI")
+ECR_REPOSITORY_NAME = Variable.get("ECR_REPOSITORY_NAME")
+ECR_SAGEMAKER_IMAGE_TAG = Variable.get("ECR_SAGEMAKER_IMAGE_TAG")
 
 # base image for k8s pods
 skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 
 # secrets to pass on to k8s pod
+secret_name = "sagemaker-access"
+SECRET_SAGEMAKER_ACCESS_ROLE_ARN = Secret(
+    deploy_type="env",
+    deploy_target="SAGEMAKER_ACCESS_ROLE_ARN",
+    secret=secret_name,
+    key="SAGEMAKER_ACCESS_ROLE_ARN",
+)
+
+secret_name = "aws-account-information"
+SECRET_AWS_ID = Secret(deploy_type="env", deploy_target="AWS_ID", secret=secret_name, key="AWS_ID")
+SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret=secret_name, key="AWS_REGION")
+
+# secrets to pass on to k8s pod
 secret_name = "airflow-s3-data-bucket-access-credentials"
 SECRET_AWS_BUCKET = Secret(deploy_type="env", deploy_target="AWS_BUCKET", secret=secret_name, key="AWS_BUCKET")
-SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret=secret_name, key="AWS_REGION")
 SECRET_AWS_ACCESS_KEY_ID = Secret(
     deploy_type="env",
     deploy_target="AWS_ACCESS_KEY_ID",
@@ -100,7 +115,7 @@ mlflow_experiment_id = make_mlflow()
 ##### AIRFLOW DAG
 #
 @dag(
-    dag_id="cnn_skin_cancer_training_pipeline",
+    dag_id="cnn_skin_cancer_workflow_deploy_test",
     default_args={
         "owner": "seblum",
         "depends_on_past": False,
@@ -110,7 +125,7 @@ mlflow_experiment_id = make_mlflow()
     schedule_interval=None,
     max_active_runs=1,
 )
-def cnn_skin_cancer_training():
+def cnn_skin_cancer_workflow():
     @task.kubernetes(
         image=skin_cancer_container_image,
         task_id="preprocessing_op",
@@ -263,15 +278,49 @@ def cnn_skin_cancer_training():
         }
         return return_dict
 
-    # serve_fastapi_app_op = BashOperator(
-    #     task_id="fastapi-serve-app",
-    #     bash_command='docker run --detach -p 80:80 -it seblum/model-serving:fastapi-serve-app && echo "fastapi-serve running"',
-    # )
+    # ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### #####
+    #
+    # TEST
 
-    # serve_streamlit_app_op = BashOperator(
-    #     task_id="streamlit-inference-app",
-    #     bash_command='docker run --detach -p 8501:8501 -it seblum/model-serving:streamlit-inference-app && echo "streamlit-inference running"',
-    # )
+    @task.kubernetes(
+        image=skin_cancer_container_image,
+        task_id="deploy_model_to_sagemaker_op",
+        namespace="airflow",
+        env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
+        in_cluster=True,
+        get_logs=True,
+        do_xcom_push=True,
+        startup_timeout_seconds=300,
+        secrets=[
+            SECRET_SAGEMAKER_ACCESS_ROLE_ARN,
+            SECRET_AWS_REGION,
+            SECRET_AWS_ID,
+        ],
+    )
+    def deploy_model_to_sagemaker_op(serving_model_dict: dict) -> dict:
+        mlflow_model_name = serving_model_dict["serving_model_name"]
+        mlflow_model_uri = serving_model_dict["serving_model_uri"]
+        mlflow_model_version = serving_model_dict["serving_model_version"]
+
+        print(mlflow_model_name)
+        # print(mlflow_model_uri)
+        print(mlflow_model_version)
+
+        from src.deploy_model_to_sagemaker import deploy_model_to_sagemaker
+
+        deployed = deploy_model_to_sagemaker(
+            mlflow_model_name=mlflow_model_name,
+            mlflow_experiment_name="cnn_skin_cancer",
+            mlflow_model_version=mlflow_model_version,
+            sagemaker_endpoint_name="test-cnn-skin-cancer",
+            sagemaker_instance_type="ml.t2.large",
+        )
+
+        return deployed
+
+    # TEST
+    #
+    # ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### #####
 
     # CREATE PIPELINE
 
@@ -298,7 +347,7 @@ def cnn_skin_cancer_training():
     )
     compare_models_dict = compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval)
 
-    # compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
+    deploy_model_to_sagemaker_op(compare_models_dict)
 
 
-cnn_skin_cancer_training()
+cnn_skin_cancer_workflow()
