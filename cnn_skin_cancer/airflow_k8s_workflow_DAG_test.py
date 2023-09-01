@@ -15,7 +15,7 @@ from kubernetes.client import models as k8s
 # SET VARIOUS PARAMETERS
 #
 EXPERIMENT_NAME = "cnn_skin_cancer"  # mlflow experiment name
-skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"  # base image for k8s pods
+skin_cancer_container_image = "seblum/cnn-skin-cancer-model:latest"  # base image for k8s pods
 
 MLFLOW_TRACKING_URI = Variable.get("MLFLOW_TRACKING_URI")
 ECR_REPOSITORY_NAME = Variable.get("ECR_REPOSITORY_NAME")

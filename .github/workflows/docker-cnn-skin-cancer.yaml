@@ -3,11 +3,11 @@ name: Docker CI cnn-skin-cancer
 env:
   PREFIX: cnn_skin_cancer/Docker
   DIRECTORY: python-base-cnn-model
-  DOCKERREPO: seblum/cnn-skin-cancer
+  DOCKERREPO: seblum/cnn-skin-cancer-model
 
 on:
   push:
-    branches: main
+    branches: feat/sync-dev
   pull_request:
     branches: [ main ]
   workflow_dispatch:
