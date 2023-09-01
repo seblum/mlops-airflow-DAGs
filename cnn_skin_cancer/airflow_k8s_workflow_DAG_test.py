@@ -10,19 +10,16 @@ from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 from kubernetes.client import models as k8s
 
-##### SET VARIOUS parameters
+################################################################################
 #
-
-# mlflow parameters
-EXPERIMENT_NAME = "cnn_skin_cancer"
+# SET VARIOUS PARAMETERS
+#
+EXPERIMENT_NAME = "cnn_skin_cancer"  # mlflow experiment name
+skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"  # base image for k8s pods
 
 MLFLOW_TRACKING_URI = Variable.get("MLFLOW_TRACKING_URI")
-# MLFLOW_TRACKING_URI = "mlflow-service.mlflow.svc.cluster.local"
 ECR_REPOSITORY_NAME = Variable.get("ECR_REPOSITORY_NAME")
 ECR_SAGEMAKER_IMAGE_TAG = Variable.get("ECR_SAGEMAKER_IMAGE_TAG")
-
-# base image for k8s pods
-skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 
 # secrets to pass on to k8s pod
 secret_name = "airflow-sagemaker-access"
@@ -91,8 +88,9 @@ model_params = {
     "verbose": 2,
 }
 
-
-##### SET MLFLOW
+################################################################################
+#
+# SET MLFLOW
 #
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
@@ -108,12 +106,14 @@ def make_mlflow() -> str:
     return mlflow_experiment_id
 
 
-# when dag is loaded, mlflow experiment is created
+# When dag is loaded, mlflow experiment is created
 mlflow_experiment_id = make_mlflow()
 # mlflow_experiment_id = "234"
 
 
-##### AIRFLOW DAG
+################################################################################
+#
+# AIRFLOW DAG
 #
 @dag(
     dag_id="cnn_skin_cancer_workflow_deploy_test",
@@ -156,9 +156,6 @@ def cnn_skin_cancer_workflow():
             dict: A dictionary containing the paths to preprocessed data.
         """
         import os
-
-        # import time
-        # time.sleep(60)
 
         aws_bucket = os.getenv("AWS_BUCKET")
 
@@ -303,13 +300,37 @@ def cnn_skin_cancer_workflow():
         ],
     )
     def deploy_model_to_sagemaker_op(serving_model_dict: dict) -> dict:
-        mlflow_model_name = serving_model_dict["serving_model_name"]
-        mlflow_model_uri = serving_model_dict["serving_model_uri"]
-        mlflow_model_version = serving_model_dict["serving_model_version"]
+        """
+        Deploys a machine learning model to Amazon SageMaker using the specified parameters.
 
-        print(mlflow_model_name)
-        print(mlflow_model_uri)
-        print(mlflow_model_version)
+        Args:
+            serving_model_dict (dict): A dictionary containing information about the model to deploy.
+                It should contain the following keys:
+                    - "serving_model_name" (str): The name of the MLflow model to be deployed.
+                    - "serving_model_uri" (str): The URI or path to the MLflow model in artifact storage.
+                    - "serving_model_version" (str): The version of the MLflow model to deploy.
+
+        Returns:
+            dict: A dictionary containing information about the deployed SageMaker model.
+                It typically includes details such as the SageMaker endpoint name and status.
+
+        Example:
+            serving_model_info = {
+                "serving_model_name": "my_mlflow_model",
+                "serving_model_uri": "s3://my-bucket/mlflow/models/my_model",
+                "serving_model_version": "1",
+            }
+            deployed_info = deploy_model_to_sagemaker_op(serving_model_info)
+        """
+        mlflow_model_name, mlflow_model_uri, mlflow_model_version = (
+            serving_model_dict["serving_model_name"],
+            serving_model_dict["serving_model_uri"],
+            serving_model_dict["serving_model_version"],
+        )
+
+        print(f"mlflow_model_name: {mlflow_model_name}")
+        print(f"mlflow_model_uri: {mlflow_model_uri}")
+        print(f"mlflow_model_version: {mlflow_model_version}")
 
         from src.deploy_model_to_sagemaker import deploy_model_to_sagemaker
 
@@ -327,8 +348,10 @@ def cnn_skin_cancer_workflow():
     #
     # ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### #####
 
+    ################################################################################
+    #
     # CREATE PIPELINE
-
+    #
     preprocessed_data = preprocessing_op(
         mlflow_experiment_id=mlflow_experiment_id,
     )

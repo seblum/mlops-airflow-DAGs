@@ -9,7 +9,7 @@ def deploy_model_to_sagemaker(
     mlflow_model_version: int,
     sagemaker_endpoint_name: str,
     sagemaker_instance_type: str,
-):
+) -> bool:
     """
     Deploy a machine learning model to AWS SageMaker from MLflow.
 
@@ -23,7 +23,7 @@ def deploy_model_to_sagemaker(
         sagemaker_instance_type (str): The SageMaker instance type for deployment.
 
     Returns:
-        None
+        bool: True if the task was completed successfully, otherwise False.
     """
     # Retrieve AWS and MLflow environment variables
     AWS_ID = os.getenv("AWS_ID")
@@ -124,3 +124,4 @@ def deploy_model_to_sagemaker(
         region_name=AWS_REGION,
         timeout_seconds=2400,
     )
+    return True
