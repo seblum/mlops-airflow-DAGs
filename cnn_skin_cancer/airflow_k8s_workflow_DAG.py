@@ -10,20 +10,33 @@ from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 from kubernetes.client import models as k8s
 
-##### SET VARIOUS parameters
+################################################################################
 #
+# SET VARIOUS PARAMETERS
+#
+EXPERIMENT_NAME = "cnn_skin_cancer"  # mlflow experiment name
+skin_cancer_container_image = "seblum/cnn-skin-cancer-model:latest"  # base image for k8s pods
 
-# mlflow parameters
-EXPERIMENT_NAME = "cnn_skin_cancer"
 MLFLOW_TRACKING_URI = Variable.get("MLFLOW_TRACKING_URI")
+ECR_REPOSITORY_NAME = Variable.get("ECR_REPOSITORY_NAME")
+ECR_SAGEMAKER_IMAGE_TAG = Variable.get("ECR_SAGEMAKER_IMAGE_TAG")
 
-# base image for k8s pods
-skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
+# secrets to pass on to k8s pod
+secret_name = "airflow-sagemaker-access"
+SECRET_SAGEMAKER_ACCESS_ROLE_ARN = Secret(
+    deploy_type="env",
+    deploy_target="SAGEMAKER_ACCESS_ROLE_ARN",
+    secret=secret_name,
+    key="SAGEMAKER_ACCESS_ROLE_ARN",
+)
+
+secret_name = "airflow-aws-account-information"
+SECRET_AWS_ID = Secret(deploy_type="env", deploy_target="AWS_ID", secret=secret_name, key="AWS_ID")
+SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret=secret_name, key="AWS_REGION")
 
 # secrets to pass on to k8s pod
 secret_name = "airflow-s3-data-bucket-access-credentials"
 SECRET_AWS_BUCKET = Secret(deploy_type="env", deploy_target="AWS_BUCKET", secret=secret_name, key="AWS_BUCKET")
-SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret=secret_name, key="AWS_REGION")
 SECRET_AWS_ACCESS_KEY_ID = Secret(
     deploy_type="env",
     deploy_target="AWS_ACCESS_KEY_ID",
@@ -75,8 +88,9 @@ model_params = {
     "verbose": 2,
 }
 
-
-##### SET MLFLOW
+################################################################################
+#
+# SET MLFLOW
 #
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
@@ -92,12 +106,13 @@ def make_mlflow() -> str:
     return mlflow_experiment_id
 
 
-# when dag is loaded, mlflow experiment is created
+# When dag is loaded, mlflow experiment is created
 mlflow_experiment_id = make_mlflow()
-# mlflow_experiment_id = "234"
 
 
-##### AIRFLOW DAG
+################################################################################
+#
+# AIRFLOW DAG
 #
 @dag(
     dag_id="cnn_skin_cancer_workflow",
@@ -140,9 +155,6 @@ def cnn_skin_cancer_workflow():
             dict: A dictionary containing the paths to preprocessed data.
         """
         import os
-
-        # import time
-        # time.sleep(60)
 
         aws_bucket = os.getenv("AWS_BUCKET")
 
@@ -263,18 +275,82 @@ def cnn_skin_cancer_workflow():
         }
         return return_dict
 
-    # serve_fastapi_app_op = BashOperator(
-    #     task_id="fastapi-serve-app",
-    #     bash_command='docker run --detach -p 80:80 -it seblum/model-serving:fastapi-serve-app && echo "fastapi-serve running"',
-    # )
+    # ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### #####
+    #
+    # TEST
 
-    # serve_streamlit_app_op = BashOperator(
-    #     task_id="streamlit-inference-app",
-    #     bash_command='docker run --detach -p 8501:8501 -it seblum/model-serving:streamlit-inference-app && echo "streamlit-inference running"',
-    # )
+    @task.kubernetes(
+        image=skin_cancer_container_image,
+        task_id="deploy_model_to_sagemaker_op",
+        namespace="airflow",
+        env_vars={
+            "MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI,
+            "ECR_REPOSITORY_NAME": ECR_REPOSITORY_NAME,
+            "ECR_SAGEMAKER_IMAGE_TAG": ECR_SAGEMAKER_IMAGE_TAG,
+        },
+        in_cluster=True,
+        get_logs=True,
+        do_xcom_push=True,
+        startup_timeout_seconds=300,
+        secrets=[
+            SECRET_SAGEMAKER_ACCESS_ROLE_ARN,
+            SECRET_AWS_REGION,
+            SECRET_AWS_ID,
+        ],
+    )
+    def deploy_model_to_sagemaker_op(serving_model_dict: dict) -> dict:
+        """
+        Deploys a machine learning model to Amazon SageMaker using the specified parameters.
 
+        Args:
+            serving_model_dict (dict): A dictionary containing information about the model to deploy.
+                It should contain the following keys:
+                    - "serving_model_name" (str): The name of the MLflow model to be deployed.
+                    - "serving_model_uri" (str): The URI or path to the MLflow model in artifact storage.
+                    - "serving_model_version" (str): The version of the MLflow model to deploy.
+
+        Returns:
+            dict: A dictionary containing information about the deployed SageMaker model.
+                It typically includes details such as the SageMaker endpoint name and status.
+
+        Example:
+            serving_model_info = {
+                "serving_model_name": "my_mlflow_model",
+                "serving_model_uri": "s3://my-bucket/mlflow/models/my_model",
+                "serving_model_version": "1",
+            }
+            deployed_info = deploy_model_to_sagemaker_op(serving_model_info)
+        """
+        mlflow_model_name, mlflow_model_uri, mlflow_model_version = (
+            serving_model_dict["serving_model_name"],
+            serving_model_dict["serving_model_uri"],
+            serving_model_dict["serving_model_version"],
+        )
+
+        print(f"mlflow_model_name: {mlflow_model_name}")
+        print(f"mlflow_model_uri: {mlflow_model_uri}")
+        print(f"mlflow_model_version: {mlflow_model_version}")
+
+        from src.deploy_model_to_sagemaker import deploy_model_to_sagemaker
+
+        deployed = deploy_model_to_sagemaker(
+            mlflow_model_name=mlflow_model_name,
+            mlflow_experiment_name="cnn_skin_cancer",
+            mlflow_model_version=mlflow_model_version,
+            sagemaker_endpoint_name="test-cnn-skin-cancer",
+            sagemaker_instance_type="ml.t2.large",
+        )
+
+        return deployed
+
+    # TEST
+    #
+    # ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### #####
+
+    ################################################################################
+    #
     # CREATE PIPELINE
-
+    #
     preprocessed_data = preprocessing_op(
         mlflow_experiment_id=mlflow_experiment_id,
     )
@@ -298,7 +374,7 @@ def cnn_skin_cancer_workflow():
     )
     compare_models_dict = compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval)
 
-    # compare_models_dict >> serve_fastapi_app_op >> serve_streamlit_app_op
+    deploy_model_to_sagemaker_op(compare_models_dict)
 
 
 cnn_skin_cancer_workflow()

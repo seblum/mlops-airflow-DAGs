@@ -1,6 +1,7 @@
 import os
 
 import mlflow
+import mlflow.sagemaker
 
 
 def deploy_model_to_sagemaker(
