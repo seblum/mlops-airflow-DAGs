@@ -30,11 +30,11 @@ def deploy_model_to_sagemaker(
     """
     # Retrieve AWS and MLflow environment variables
     AWS_ID = os.getenv("AWS_ID")
-    ECR_REPOSITORY_NAME = os.getenv("ECR_REPOSITORY_NAME")
-    SAGEMAKER_ACCESS_ROLE_ARN = os.getenv("SAGEMAKER_ACCESS_ROLE_ARN")
-    MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
     AWS_REGION = os.getenv("AWS_REGION")
+    ECR_REPOSITORY_NAME = os.getenv("ECR_REPOSITORY_NAME")
     ECR_SAGEMAKER_IMAGE_TAG = os.getenv("ECR_SAGEMAKER_IMAGE_TAG")
+    MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
+    SAGEMAKER_ACCESS_ROLE_ARN = os.getenv("SAGEMAKER_ACCESS_ROLE_ARN")
 
     # Set the MLflow tracking URI
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)

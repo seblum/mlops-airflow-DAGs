@@ -295,6 +295,8 @@ def cnn_skin_cancer_workflow():
         secrets=[
             SECRET_SAGEMAKER_ACCESS_ROLE_ARN,
             SECRET_AWS_REGION,
+            SECRET_AWS_ACCESS_KEY_ID,
+            SECRET_AWS_SECRET_ACCESS_KEY,
             SECRET_AWS_ID,
         ],
     )
