@@ -17,7 +17,7 @@ from kubernetes.client import models as k8s
 EXPERIMENT_NAME = "cnn_skin_cancer"
 
 MLFLOW_TRACKING_URI = Variable.get("MLFLOW_TRACKING_URI")
-MLFLOW_TRACKING_URI = "mlflow-service.mlflow.svc.cluster.local"
+# MLFLOW_TRACKING_URI = "mlflow-service.mlflow.svc.cluster.local"
 ECR_REPOSITORY_NAME = Variable.get("ECR_REPOSITORY_NAME")
 ECR_SAGEMAKER_IMAGE_TAG = Variable.get("ECR_SAGEMAKER_IMAGE_TAG")
 
