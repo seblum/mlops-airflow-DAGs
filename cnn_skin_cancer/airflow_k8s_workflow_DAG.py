@@ -335,8 +335,9 @@ def cnn_skin_cancer_workflow():
 
         deployed = deploy_model_to_sagemaker(
             mlflow_model_name=mlflow_model_name,
-            mlflow_experiment_name="cnn_skin_cancer",
+            mlflow_model_uri=mlflow_model_uri,
             mlflow_model_version=mlflow_model_version,
+            mlflow_experiment_name="cnn_skin_cancer",
             sagemaker_endpoint_name="test-cnn-skin-cancer",
             sagemaker_instance_type="ml.t2.large",
         )

@@ -6,6 +6,7 @@ import mlflow.sagemaker
 
 def deploy_model_to_sagemaker(
     mlflow_model_name: str,
+    mlflow_model_uri: str,
     mlflow_experiment_name: str,
     mlflow_model_version: int,
     sagemaker_endpoint_name: str,
@@ -18,6 +19,7 @@ def deploy_model_to_sagemaker(
 
     Args:
         mlflow_model_name (str): The name of the MLflow model to deploy.
+        mlflow_model_uri (str): The URI of the MLflow model from the registry.
         mlflow_experiment_name (str): The name of the MLflow experiment containing the model.
         mlflow_model_version (int): The version of the MLflow model to deploy.
         sagemaker_endpoint_name (str): The desired name for the SageMaker endpoint.
@@ -114,11 +116,12 @@ def deploy_model_to_sagemaker(
 
     # print(f"model_uri: {model_uri}")
     print(f"model_source: {model_source}")
+    print(f"mlflow_model_uri: {mlflow_model_uri}")
 
     mlflow.sagemaker._deploy(
         mode="create",
         app_name=sagemaker_endpoint_name,
-        model_uri=model_source,
+        model_uri=mlflow_model_uri,
         image_url=image_url,
         execution_role_arn=execution_role_arn,
         instance_type=sagemaker_instance_type,
