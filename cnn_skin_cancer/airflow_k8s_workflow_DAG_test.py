@@ -24,7 +24,7 @@ ECR_SAGEMAKER_IMAGE_TAG = Variable.get("ECR_SAGEMAKER_IMAGE_TAG")
 skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
 
 # secrets to pass on to k8s pod
-secret_name = "sagemaker-access"
+secret_name = "airflow-sagemaker-access"
 SECRET_SAGEMAKER_ACCESS_ROLE_ARN = Secret(
     deploy_type="env",
     deploy_target="SAGEMAKER_ACCESS_ROLE_ARN",
@@ -32,7 +32,7 @@ SECRET_SAGEMAKER_ACCESS_ROLE_ARN = Secret(
     key="SAGEMAKER_ACCESS_ROLE_ARN",
 )
 
-secret_name = "aws-account-information"
+secret_name = "airflow-aws-account-information"
 SECRET_AWS_ID = Secret(deploy_type="env", deploy_target="AWS_ID", secret=secret_name, key="AWS_ID")
 SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret=secret_name, key="AWS_REGION")
 
@@ -286,7 +286,11 @@ def cnn_skin_cancer_workflow():
         image=skin_cancer_container_image,
         task_id="deploy_model_to_sagemaker_op",
         namespace="airflow",
-        env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
+        env_vars={
+            "MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI,
+            "ECR_REPOSITORY_NAME": ECR_REPOSITORY_NAME,
+            "ECR_SAGEMAKER_IMAGE_TAG": ECR_SAGEMAKER_IMAGE_TAG,
+        },
         in_cluster=True,
         get_logs=True,
         do_xcom_push=True,
@@ -303,7 +307,7 @@ def cnn_skin_cancer_workflow():
         mlflow_model_version = serving_model_dict["serving_model_version"]
 
         print(mlflow_model_name)
-        # print(mlflow_model_uri)
+        print(mlflow_model_uri)
         print(mlflow_model_version)
 
         from src.deploy_model_to_sagemaker import deploy_model_to_sagemaker
