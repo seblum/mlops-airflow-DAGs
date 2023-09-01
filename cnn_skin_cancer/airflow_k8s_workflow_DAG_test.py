@@ -108,8 +108,8 @@ def make_mlflow() -> str:
 
 
 # when dag is loaded, mlflow experiment is created
-# mlflow_experiment_id = make_mlflow()
-mlflow_experiment_id = "234"
+mlflow_experiment_id = make_mlflow()
+# mlflow_experiment_id = "234"
 
 
 ##### AIRFLOW DAG
