@@ -93,10 +93,11 @@ def deploy_model_to_sagemaker(
         )
 
         run_id = model_version_details.run_id
-        model_uri = f"mlruns/{experiment_id}/{run_id}/artifacts/{model_name}"
+        # model_uri = f"mlruns/{experiment_id}/{run_id}/artifacts/{model_name}"
+        # model_uri = f"mlruns/{experiment_id}/{run_id}/artifacts/{model_name}"
         model_source = model_version_details.source
 
-        return model_uri, model_source
+        return model_source
 
     image_url = _build_image_url(
         aws_id=AWS_ID,
@@ -105,19 +106,19 @@ def deploy_model_to_sagemaker(
         ecr_sagemaker_image_tag=ECR_SAGEMAKER_IMAGE_TAG,
     )
     execution_role_arn = _build_execution_role_arn(aws_id=AWS_ID, sagemaker_access_role_arn=SAGEMAKER_ACCESS_ROLE_ARN)
-    model_uri, model_source = _get_mlflow_parameters(
+    model_source = _get_mlflow_parameters(
         experiment_name=mlflow_experiment_name,
         model_name=mlflow_model_name,
         model_version=mlflow_model_version,
     )
 
-    print(f"model_uri: {model_uri}")
+    # print(f"model_uri: {model_uri}")
     print(f"model_source: {model_source}")
 
     mlflow.sagemaker._deploy(
         mode="create",
         app_name=sagemaker_endpoint_name,
-        model_uri=model_uri,
+        model_uri=model_source,
         image_url=image_url,
         execution_role_arn=execution_role_arn,
         instance_type=sagemaker_instance_type,
