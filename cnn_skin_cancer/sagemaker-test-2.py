@@ -42,14 +42,16 @@ model_uri, model_source = get_mlflow_parameters(
 print(f"model_uri: {model_uri}")
 print(f"model_source: {model_source}")
 
-mlflow.sagemaker._deploy(
-    mode="create",
-    app_name=sagemaker_endpoint_name,
-    model_uri=model_uri,
-    image_url=image_url,
-    execution_role_arn=execution_role_arn,
-    instance_type=sagemaker_instance_type,
-    instance_count=1,
-    region_name=AWS_REGION,
-    timeout_seconds=2400,
-)
+
+def deploy():
+    mlflow.sagemaker._deploy(
+        mode="create",
+        app_name=sagemaker_endpoint_name,
+        model_uri=model_uri,
+        image_url=image_url,
+        execution_role_arn=execution_role_arn,
+        instance_type=sagemaker_instance_type,
+        instance_count=1,
+        region_name=AWS_REGION,
+        timeout_seconds=2400,
+    )
