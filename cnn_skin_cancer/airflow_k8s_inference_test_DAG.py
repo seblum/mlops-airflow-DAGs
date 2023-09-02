@@ -43,7 +43,7 @@ def cnn_skin_cancer_sagemaker_inference_test():
         # env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
         in_cluster=True,
         get_logs=True,
-        do_xcom_push=True,
+        # do_xcom_push=True,
         startup_timeout_seconds=300,
         # service_account_name="airflow-sa",
         secrets=[
@@ -88,11 +88,12 @@ def cnn_skin_cancer_sagemaker_inference_test():
         predictions = query_endpoint(app_name=sagemaker_endpoint_name, data=payload)
         print(predictions)
 
-    @task()
-    def return_ok():
-        print("ok")
+    # @task()
+    # def return_ok():
+    #     print("ok")
 
-    inference_call_op() > return_ok()
+    # inference_call_op() > return_ok()
+    inference_call_op()
 
 
 cnn_skin_cancer_sagemaker_inference_test()
