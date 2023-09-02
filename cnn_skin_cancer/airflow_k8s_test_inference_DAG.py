@@ -3,21 +3,12 @@ from airflow.decorators import dag, task
 from airflow.kubernetes.secret import Secret
 from airflow.models import Variable
 
-################################################################################
-#
-# SET VARIOUS PARAMETERS
-#
+# SET PARAMETERS
 skin_cancer_container_image = "seblum/cnn-skin-cancer-model:latest"  # base image for k8s pods
 
-# EXPERIMENT_NAME = "cnn_skin_cancer"  # mlflow experiment name
-# MLFLOW_TRACKING_URI = Variable.get("MLFLOW_TRACKING_URI")
-# ECR_REPOSITORY_NAME = Variable.get("ECR_REPOSITORY_NAME")
-# ECR_SAGEMAKER_IMAGE_TAG = Variable.get("ECR_SAGEMAKER_IMAGE_TAG")
-
-
-secret_name = "airflow-aws-account-information"
-# SECRET_AWS_ID = Secret(deploy_type="env", deploy_target="AWS_ID", secret=secret_name, key="AWS_ID")
-SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret=secret_name, key="AWS_REGION")
+SECRET_AWS_REGION = Secret(
+    deploy_type="env", deploy_target="AWS_REGION", secret="airflow-aws-account-information", key="AWS_REGION"
+)
 
 
 ################################################################################
