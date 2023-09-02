@@ -31,10 +31,10 @@ def deploy_model_to_sagemaker(
     # Retrieve AWS and MLflow environment variables
     AWS_ID = os.getenv("AWS_ID")
     AWS_REGION = os.getenv("AWS_REGION")
+    AWS_ACCESS_ROLE_NAME_SAGEMAKER = os.getenv("AWS_ROLE_NAME_SAGEMAKER")
     ECR_REPOSITORY_NAME = os.getenv("ECR_REPOSITORY_NAME")
     ECR_SAGEMAKER_IMAGE_TAG = os.getenv("ECR_SAGEMAKER_IMAGE_TAG")
     MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
-    SAGEMAKER_ACCESS_ROLE_ARN = os.getenv("SAGEMAKER_ACCESS_ROLE_ARN")
 
     # Set the MLflow tracking URI
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
@@ -60,18 +60,18 @@ def deploy_model_to_sagemaker(
         image_url = f"{aws_id}.dkr.ecr.{aws_region}.amazonaws.com/{ecr_repository_name}:{ecr_sagemaker_image_tag}"
         return image_url
 
-    def _build_execution_role_arn(aws_id: str, sagemaker_access_role_arn: str) -> str:
+    def _build_execution_role_arn(aws_id: str, access_role_name: str) -> str:
         """
         Build the SageMaker execution role ARN.
 
         Args:
             aws_id (str): AWS account ID.
-            sagemaker_access_role_arn (str): SageMaker execution role name.
+            access_role_name (str): SageMaker execution role name.
 
         Returns:
             str: The SageMaker execution role ARN.
         """
-        execution_role_arn = f"arn:aws:iam::{aws_id}:role/{sagemaker_access_role_arn}"
+        execution_role_arn = f"arn:aws:iam::{aws_id}:role/{access_role_name}"
         return execution_role_arn
 
     def _get_mlflow_parameters(experiment_name: str, model_name: str, model_version: int) -> (str, str, str):
@@ -106,7 +106,7 @@ def deploy_model_to_sagemaker(
         ecr_repository_name=ECR_REPOSITORY_NAME,
         ecr_sagemaker_image_tag=ECR_SAGEMAKER_IMAGE_TAG,
     )
-    execution_role_arn = _build_execution_role_arn(aws_id=AWS_ID, sagemaker_access_role_arn=SAGEMAKER_ACCESS_ROLE_ARN)
+    execution_role_arn = _build_execution_role_arn(aws_id=AWS_ID, access_role_name=AWS_ACCESS_ROLE_NAME_SAGEMAKER)
     model_source, model_source_adapted = _get_mlflow_parameters(
         experiment_name=mlflow_experiment_name,
         model_name=mlflow_model_name,

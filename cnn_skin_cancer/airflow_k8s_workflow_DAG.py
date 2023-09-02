@@ -23,11 +23,11 @@ ECR_SAGEMAKER_IMAGE_TAG = Variable.get("ECR_SAGEMAKER_IMAGE_TAG")
 
 # secrets to pass on to k8s pod
 secret_name = "airflow-sagemaker-access"
-SECRET_SAGEMAKER_ACCESS_ROLE_ARN = Secret(
+SECRET_AWS_ROLE_NAME_SAGEMAKER = Secret(
     deploy_type="env",
-    deploy_target="SAGEMAKER_ACCESS_ROLE_ARN",
+    deploy_target="AWS_ROLE_NAME_SAGEMAKER",
     secret=secret_name,
-    key="SAGEMAKER_ACCESS_ROLE_ARN",
+    key="AWS_ROLE_NAME_SAGEMAKER",
 )
 
 secret_name = "airflow-aws-account-information"
@@ -187,6 +187,7 @@ def cnn_skin_cancer_workflow():
         startup_timeout_seconds=300,
         node_selector=node_selector,
         tolerations=tolerations,
+        # service_account_name="airflow-sa",
         secrets=[
             SECRET_AWS_BUCKET,
             SECRET_AWS_REGION,
@@ -238,13 +239,14 @@ def cnn_skin_cancer_workflow():
         get_logs=True,
         do_xcom_push=True,
         startup_timeout_seconds=300,
-        secrets=[
-            SECRET_AWS_BUCKET,
-            SECRET_AWS_REGION,
-            SECRET_AWS_ACCESS_KEY_ID,
-            SECRET_AWS_SECRET_ACCESS_KEY,
-            SECRET_AWS_ROLE_NAME,
-        ],
+        service_account_name="airflow-sa"
+        # secrets=[
+        #     SECRET_AWS_BUCKET,
+        #     # SECRET_AWS_REGION,
+        #     # SECRET_AWS_ACCESS_KEY_ID,
+        #     # SECRET_AWS_SECRET_ACCESS_KEY,
+        #     SECRET_AWS_ROLE_NAME,
+        # ],
     )
     def compare_models_op(train_data_basic: dict, train_data_resnet50: dict, train_data_crossval: dict) -> dict:
         """
@@ -294,7 +296,7 @@ def cnn_skin_cancer_workflow():
         startup_timeout_seconds=300,
         service_account_name="airflow-sa",
         secrets=[
-            SECRET_SAGEMAKER_ACCESS_ROLE_ARN,
+            SECRET_AWS_ROLE_NAME_SAGEMAKER,
             SECRET_AWS_REGION,
             # SECRET_AWS_ACCESS_KEY_ID,
             # SECRET_AWS_SECRET_ACCESS_KEY,
@@ -336,7 +338,7 @@ def cnn_skin_cancer_workflow():
 
         from src.deploy_model_to_sagemaker import deploy_model_to_sagemaker
 
-        deployed = deploy_model_to_sagemaker(
+        deploy_model_to_sagemaker(
             mlflow_model_name=mlflow_model_name,
             mlflow_model_uri=mlflow_model_uri,
             mlflow_model_version=mlflow_model_version,
@@ -344,8 +346,6 @@ def cnn_skin_cancer_workflow():
             sagemaker_endpoint_name="test-cnn-skin-cancer",
             sagemaker_instance_type="ml.t2.large",
         )
-
-        return deployed
 
     # TEST
     #
