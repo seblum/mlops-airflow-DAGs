@@ -15,7 +15,7 @@ AWS_REGION = os.getenv("AWS_REGION")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_ROLE_NAME = os.getenv("AWS_ROLE_NAME")
-skin_cancer_container_image = "seblum/cnn-skin-cancer:latest"
+skin_cancer_container_image = "seblum/cnn-skin-cancer-model:latest"
 
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI_local)
