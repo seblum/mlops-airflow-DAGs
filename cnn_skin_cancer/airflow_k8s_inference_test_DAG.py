@@ -88,7 +88,11 @@ def cnn_skin_cancer_sagemaker_inference_test():
         predictions = query_endpoint(app_name=sagemaker_endpoint_name, data=payload)
         print(predictions)
 
-    inference_call_op()
+    @task()
+    def return_ok():
+        print("ok")
+
+    inference_call_op() > return_ok()
 
 
 cnn_skin_cancer_sagemaker_inference_test()
