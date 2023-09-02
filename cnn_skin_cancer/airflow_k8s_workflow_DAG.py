@@ -135,7 +135,7 @@ def cnn_skin_cancer_workflow():
         get_logs=True,
         do_xcom_push=True,
         startup_timeout_seconds=300,
-        # service_account_name="airflow-sa",
+        service_account_name="airflow-sa",
         secrets=[
             SECRET_AWS_BUCKET,
             SECRET_AWS_REGION,
@@ -187,7 +187,7 @@ def cnn_skin_cancer_workflow():
         startup_timeout_seconds=300,
         node_selector=node_selector,
         tolerations=tolerations,
-        # service_account_name="airflow-sa",
+        service_account_name="airflow-sa",
         secrets=[
             SECRET_AWS_BUCKET,
             SECRET_AWS_REGION,
