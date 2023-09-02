@@ -59,22 +59,23 @@ def cnn_skin_cancer_sagemaker_inference_test():
 
         from src.inference_to_sagemaker import (
             check_status,
+            get_image_directory,
             preprocess_image,
             query_endpoint,
             read_imagefile,
         )
 
+        filenames = ["1.jpg", "10.jpg", "1003.jpg", "1005.jpg", "1007.jpg"]
+
+        path = get_image_directory()
+        print(path)
+
+        file = f"{path}/1.jpg"
+
         # Check endpoint status
         print("[+] Endpoint Status")
-        print(f"Application status is {sagemaker_endpoint_name}")
+        print(f"Application status is {check_status(sagemaker_endpoint_name)}")
 
-        filenames = ["1.jpg", "10.jpg", "1003.jpg", "1005.jpg", "1007.jpg"]
-        import os
-
-        print("getcwd:      ", os.getcwd())
-        print("__file__:    ", __file__)
-
-        file = "./cnn_skin_cancer/images/inferencing/1.jpg"
         image = read_imagefile(file)
 
         print("[+] Preprocess Data")
