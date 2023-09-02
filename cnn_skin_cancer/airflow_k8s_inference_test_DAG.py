@@ -25,7 +25,7 @@ SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret
 # AIRFLOW DAG
 #
 @dag(
-    dag_id="cnn_skin_cancer_sagemaker_inference_test",
+    dag_id="cnn_skin_cancer_sagemaker_test_inference",
     default_args={
         "owner": "seblum",
         "depends_on_past": False,
@@ -89,11 +89,20 @@ def cnn_skin_cancer_sagemaker_inference_test():
         predictions = query_endpoint(app_name=sagemaker_endpoint_name, data=payload)
         print(predictions)
 
-    # @task()
-    # def return_ok():
-    #     print("ok")
+    @task.kubernetes(
+        image=skin_cancer_container_image,
+        task_id="inference_call_op_2",
+        namespace="airflow",
+        in_cluster=True,
+        get_logs=True,
+        startup_timeout_seconds=300,
+        service_account_name="airflow-sa",
+    )
+    def inference_call_op_2():
 
-    # inference_call_op() > return_ok()
+        print("HELLO")
+
+    inference_call_op_2()
     inference_call_op()
 
 
