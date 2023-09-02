@@ -289,7 +289,7 @@ def cnn_skin_cancer_workflow():
             SECRET_AWS_ID,
         ],
     )
-    def deploy_model_to_sagemaker_op(serving_model_dict: dict) -> dict:
+    def deploy_model_to_sagemaker_op(serving_model_dict: dict):
         """
         Deploys a machine learning model to Amazon SageMaker using the specified parameters.
 
