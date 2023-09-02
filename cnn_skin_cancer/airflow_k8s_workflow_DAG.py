@@ -239,14 +239,7 @@ def cnn_skin_cancer_workflow():
         get_logs=True,
         do_xcom_push=True,
         startup_timeout_seconds=300,
-        service_account_name="airflow-sa"
-        # secrets=[
-        #     SECRET_AWS_BUCKET,
-        #     # SECRET_AWS_REGION,
-        #     # SECRET_AWS_ACCESS_KEY_ID,
-        #     # SECRET_AWS_SECRET_ACCESS_KEY,
-        #     SECRET_AWS_ROLE_NAME,
-        # ],
+        service_account_name="airflow-sa",  # Don't need Access Secrets as SA is given
     )
     def compare_models_op(train_data_basic: dict, train_data_resnet50: dict, train_data_crossval: dict) -> dict:
         """
@@ -277,10 +270,6 @@ def cnn_skin_cancer_workflow():
         }
         return return_dict
 
-    # ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### #####
-    #
-    # TEST
-    #
     @task.kubernetes(
         image=skin_cancer_container_image,
         task_id="deploy_model_to_sagemaker_op",
@@ -292,14 +281,11 @@ def cnn_skin_cancer_workflow():
         },
         in_cluster=True,
         get_logs=True,
-        do_xcom_push=True,
         startup_timeout_seconds=300,
         service_account_name="airflow-sa",
         secrets=[
             SECRET_AWS_ROLE_NAME_SAGEMAKER,
             SECRET_AWS_REGION,
-            # SECRET_AWS_ACCESS_KEY_ID,
-            # SECRET_AWS_SECRET_ACCESS_KEY,
             SECRET_AWS_ID,
         ],
     )
@@ -346,10 +332,6 @@ def cnn_skin_cancer_workflow():
             sagemaker_endpoint_name="test-cnn-skin-cancer",
             sagemaker_instance_type="ml.t2.large",
         )
-
-    # TEST
-    #
-    # ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### #####
 
     ################################################################################
     #
