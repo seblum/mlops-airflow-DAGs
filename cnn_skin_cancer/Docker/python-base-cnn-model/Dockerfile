@@ -16,6 +16,8 @@ RUN poetry install --only main --no-root --no-interaction && \
     poetry cache clear pypi --all
 
 COPY $app_directory/src /app/src
+COPY $app_directory/images /app/images
+
 RUN poetry install --only-root
 
 
