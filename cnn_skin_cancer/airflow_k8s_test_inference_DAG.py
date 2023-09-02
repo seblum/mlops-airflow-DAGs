@@ -36,14 +36,16 @@ SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret
     max_active_runs=1,
 )
 def cnn_skin_cancer_sagemaker_inference_test():
+    """
+    Apache Airflow DAG for testing inference on a CNN SageMaker deployment.
+    """
+
     @task.kubernetes(
         image=skin_cancer_container_image,
         task_id="inference_call_op",
         namespace="airflow",
-        # env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
         in_cluster=True,
         get_logs=True,
-        # do_xcom_push=True,
         startup_timeout_seconds=300,
         service_account_name="airflow-sa",
         secrets=[
@@ -51,43 +53,45 @@ def cnn_skin_cancer_sagemaker_inference_test():
         ],
     )
     def inference_call_op():
-
-        sagemaker_endpoint_name = "test-cnn-skin-cancer"
-        region = "eu-central-1"
-
+        """
+        Perform inference on a SageMaker endpoint with multiple images.
+        """
         import json
 
         from src.inference_to_sagemaker import (
-            check_status,
+            endpoint_status,
             get_image_directory,
             preprocess_image,
             query_endpoint,
             read_imagefile,
         )
 
+        sagemaker_endpoint_name = "test-cnn-skin-cancer"
+
+        image_directoy = get_image_directory()
+        print(f"Image directory: {image_directoy}")
         filenames = ["1.jpg", "10.jpg", "1003.jpg", "1005.jpg", "1007.jpg"]
 
-        path = get_image_directory()
-        print(path)
+        for file in filenames:
+            filepath = f"{image_directoy}/{file}"
+            print(f"[+] New Inference")
+            print(f"[+] FilePath is {filepath}")
 
-        file = f"{path}/1.jpg"
+            # Check endpoint status
+            print("[+] Endpoint Status")
+            print(f"Application status is {endpoint_status(sagemaker_endpoint_name)}")
 
-        # Check endpoint status
-        print("[+] Endpoint Status")
-        print(f"Application status is {check_status(sagemaker_endpoint_name)}")
+            image = read_imagefile(filepath)
 
-        image = read_imagefile(file)
+            print("[+] Preprocess Data")
+            np_image = preprocess_image(image)
 
-        print("[+] Preprocess Data")
-        np_image = preprocess_image(image)
+            # Add instances fiels so np_image can be inferenced by MLflow model
+            payload = json.dumps({"instances": np_image.tolist()})
 
-        # payload = json.dumps(np_image.tolist())
-
-        payload = json.dumps({"instances": np_image.tolist()})
-
-        print("[+] Prediction")
-        predictions = query_endpoint(app_name=sagemaker_endpoint_name, data=payload)
-        print(predictions)
+            print("[+] Prediction")
+            predictions = query_endpoint(app_name=sagemaker_endpoint_name, data=payload)
+            print(f"Received response for {file}: {predictions}")
 
     inference_call_op()
 
