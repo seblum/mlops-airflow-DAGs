@@ -135,6 +135,10 @@ mlflow_experiment_id = make_mlflow()
     max_active_runs=1,
 )
 def cnn_skin_cancer_workflow():
+    """
+    Apache Airflow DAG for running a workflow to train, compare, and deploy skin cancer classification models.
+    """
+
     @task.kubernetes(
         image=skin_cancer_container_image,
         task_id="preprocessing_op",
