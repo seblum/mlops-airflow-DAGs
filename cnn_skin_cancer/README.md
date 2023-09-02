@@ -5,7 +5,8 @@ This repository showcases a use case for CNN skin cancer classification using a 
 # Contents
 
 * `airflow_docker_DAG.py`: This file contains the Airflow DAG definition, which orchestrates the entire pipeline on Docker.
-* `airflow_k8s_DAG.py`: This file contains the Airflow DAG definition, which orchestrates the pipeline on K8s.
+* `airflow_k8s_workflow_DAG.py`: This file contains the Airflow DAG definition, which orchestrates the pipeline on K8s.
+* `airflow_k8s_test_inference_DAG.py`: This file contains the Airflow DAG definition, to test the endpoints created in the `cnn_skin_cancer_workflow` DAG.
 * `Docker/`: This directory contains the Dockerfiles used to build the containers for different tasks within the pipeline.
 * `src/`: This directory contains the ML pipeline code, including data preprocessing, model training, evaluation, and model comparison. The code in this directory is packaged using Poetry, a dependency management tool for Python.
 
