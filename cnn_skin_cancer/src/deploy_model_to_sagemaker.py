@@ -92,8 +92,9 @@ def deploy_model_to_sagemaker(
             version=model_version,
         )
 
-        experiment_id = dict(mlflow.get_experiment_by_name(experiment_name))["experiment_id"]
-        run_id = model_version_details.run_id
+        # This is for local
+        # experiment_id = dict(mlflow.get_experiment_by_name(experiment_name))["experiment_id"]
+        # run_id = model_version_details.run_id
         # model_uri = f"mlruns/{experiment_id}/{run_id}/artifacts/{model_name}"
         model_source = model_version_details.source
         model_source_adapted = f"{model_source.removesuffix(model_name)}model"
@@ -113,7 +114,6 @@ def deploy_model_to_sagemaker(
         model_version=mlflow_model_version,
     )
 
-    # print(f"model_uri: {model_uri}")
     print(f"model_source: {model_source}")
     print(f"mlflow_model_uri: {mlflow_model_uri}")
     print(f"model_source_adapted: {model_source_adapted}")

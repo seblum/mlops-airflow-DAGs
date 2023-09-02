@@ -10,9 +10,10 @@
 # tag_id = "2.4.1"
 # tag_id = "v2.3.2"
 # region_name = "eu-central-1"
-# aws_id = "855372857567"
-# role_name = "test-role-sagemaker"
+# aws_id = "ID"
+
 # role_name = "sagemaker-access-role"
+# role_name = "sagemakertestrole"
 
 # model_name = "Basic"
 # experiment_name = "cnn_skin_cancer"
@@ -27,8 +28,20 @@
 # # Get model information
 
 
-# def get_mlflow_parameters(experiment_name: str, model_name: str, model_version: str) -> (str, str, str):
-#     experiment_id = dict(mlflow.get_experiment_by_name(experiment_name))["experiment_id"]
+# from pathlib import Path
+
+
+# def make_path():
+#     path = f"{Path(__file__).parent.parent}/images"
+#     return path
+
+
+# def get_mlflow_parameters(
+#     experiment_name: str, model_name: str, model_version: str
+# ) -> (str, str, str):
+#     experiment_id = dict(mlflow.get_experiment_by_name(experiment_name))[
+#         "experiment_id"
+#     ]
 
 #     client = mlflow.MlflowClient()
 #     model_version_details = client.get_model_version(
@@ -51,6 +64,8 @@
 # print(f"run_id:         {run_id}")
 # print(f"source:         {source}")
 
+# print(f"{source.removesuffix(model_name)}model")
+
 # # deploy to sagemaker
 
 # # URL of the ECR-hosted Docker image the model should be deployed into
@@ -66,6 +81,16 @@
 
 
 # endpoint_name = "test-cnn-skin-cancer"
+
+# import boto3
+
+# session = boto3.Session()
+# sts = session.client("sts")
+# response = sts.assume_role(
+#     RoleArn="arn:aws:iam::855372857567:role/sagemakertestrole",
+#     RoleSessionName="learnaws-test-session",
+# )
+# print(response)
 
 # mlflow.sagemaker._deploy(
 #     mode="create",

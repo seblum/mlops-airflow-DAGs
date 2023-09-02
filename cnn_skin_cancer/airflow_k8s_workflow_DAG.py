@@ -96,12 +96,21 @@ mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 
 def make_mlflow() -> str:
+    """
+    Creates an MLflow experiment and sets it as the active experiment.
+
+    Returns:
+        str: The experiment ID of the created or existing MLflow experiment.
+
+    Example:
+        # Create an MLflow experiment and set it as active
+        experiment_id = make_mlflow()
+        print(f"Active MLflow experiment ID: {experiment_id}")
+    """
     try:
-        # Creating an experiment
         mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
     except:
         pass
-    # Setting the environment with the created experiment
     mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
     return mlflow_experiment_id
 
