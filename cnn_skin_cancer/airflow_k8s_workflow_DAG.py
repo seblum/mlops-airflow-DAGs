@@ -292,6 +292,7 @@ def cnn_skin_cancer_workflow():
         get_logs=True,
         do_xcom_push=True,
         startup_timeout_seconds=300,
+        service_account_name="airflow-sa",
         secrets=[
             SECRET_SAGEMAKER_ACCESS_ROLE_ARN,
             SECRET_AWS_REGION,
