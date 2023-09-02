@@ -300,10 +300,6 @@ def cnn_skin_cancer_workflow():
                     - "serving_model_uri" (str): The URI or path to the MLflow model in artifact storage.
                     - "serving_model_version" (str): The version of the MLflow model to deploy.
 
-        Returns:
-            dict: A dictionary containing information about the deployed SageMaker model.
-                It typically includes details such as the SageMaker endpoint name and status.
-
         Example:
             serving_model_info = {
                 "serving_model_name": "my_mlflow_model",
