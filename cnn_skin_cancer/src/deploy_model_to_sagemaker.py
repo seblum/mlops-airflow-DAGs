@@ -1,19 +1,7 @@
 import os
-from pathlib import Path
 
 import mlflow
 import mlflow.sagemaker
-
-
-def get_image_directory():
-    """
-    Get the file path for the 'images' directory relative to the current script's location.
-
-    Returns:
-        str: The absolute file path to the 'images' directory.
-    """
-    path = f"{Path(__file__).parent.parent}/images"
-    return path
 
 
 def deploy_model_to_sagemaker(
