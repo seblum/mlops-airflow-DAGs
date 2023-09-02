@@ -8,6 +8,8 @@ env:
 on:
   push:
     branches: feat/sync-dev
+    paths:
+      - ./cnn_skin_cancer/src
   pull_request:
     branches: [ main ]
   workflow_dispatch:
