@@ -45,7 +45,7 @@ def cnn_skin_cancer_sagemaker_inference_test():
         get_logs=True,
         # do_xcom_push=True,
         startup_timeout_seconds=300,
-        # service_account_name="airflow-sa",
+        service_account_name="airflow-sa",
         secrets=[
             SECRET_AWS_REGION,
         ],
