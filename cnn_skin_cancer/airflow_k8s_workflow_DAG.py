@@ -310,7 +310,7 @@ def cnn_skin_cancer_workflow():
                 "serving_model_uri": "s3://my-bucket/mlflow/models/my_model",
                 "serving_model_version": "1",
             }
-            deployed_info = deploy_model_to_sagemaker_op(serving_model_info)
+            deploy_model_to_sagemaker_op(serving_model_info)
         """
         mlflow_model_name, mlflow_model_uri, mlflow_model_version = (
             serving_model_dict["serving_model_name"],
@@ -324,7 +324,7 @@ def cnn_skin_cancer_workflow():
 
         from src.deploy_model_to_sagemaker import deploy_model_to_sagemaker
 
-        deploy_model_to_sagemaker(
+        result = deploy_model_to_sagemaker(
             mlflow_model_name=mlflow_model_name,
             mlflow_model_uri=mlflow_model_uri,
             mlflow_model_version=mlflow_model_version,
@@ -332,6 +332,8 @@ def cnn_skin_cancer_workflow():
             sagemaker_endpoint_name="test-cnn-skin-cancer",
             sagemaker_instance_type="ml.t2.large",
         )
+
+        print(f"Script run successfully: {result}")
 
     ################################################################################
     #
