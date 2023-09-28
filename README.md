@@ -35,7 +35,7 @@ export AWS_REGION="<AWS-REGION>"
 
 Contributions to this repository are welcome! If you have any improvements, bug fixes, or new use case suggestions, please submit a pull request. For major changes, please open an issue first to discuss the proposed changes.
 
-##  License
+## License
 
 This repository is licensed under the Apache License. Feel free to use and modify the code as per your needs.
 
