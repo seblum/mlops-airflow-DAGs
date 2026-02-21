@@ -1,35 +1,29 @@
+"""
+Inference test DAG: validates a deployed SageMaker endpoint using sample images.
+
+AWS_REGION is resolved from the Kubernetes Secrets Backend (K8s secret synced
+by External Secrets Operator) — no explicit Secret() objects needed.
+"""
+
 import pendulum
 from airflow.decorators import dag, task
-from airflow.kubernetes.secret import Secret
-from airflow.models import Variable
 
-# SET PARAMETERS
-skin_cancer_container_image = "seblum/cnn-skin-cancer-model:latest"  # base image for k8s pods
-
-SECRET_AWS_REGION = Secret(
-    deploy_type="env", deploy_target="AWS_REGION", secret="airflow-aws-account-information", key="AWS_REGION"
-)
+skin_cancer_container_image = "seblum/cnn-skin-cancer-model:latest"
 
 
-################################################################################
-#
-# AIRFLOW DAG
-#
 @dag(
     dag_id="cnn_skin_cancer_sagemaker_test_inference",
     default_args={
         "owner": "seblum",
         "depends_on_past": False,
         "start_date": pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
-        "tags": ["Inference test on CNN sagemaker deployment"],
     },
-    schedule_interval=None,
+    tags=["Inference test on CNN sagemaker deployment"],
+    schedule=None,
     max_active_runs=1,
 )
 def cnn_skin_cancer_sagemaker_inference_test():
-    """
-    Apache Airflow DAG for testing inference on a CNN SageMaker deployment.
-    """
+    """Apache Airflow DAG for testing inference on a CNN SageMaker deployment."""
 
     @task.kubernetes(
         image=skin_cancer_container_image,
@@ -39,14 +33,10 @@ def cnn_skin_cancer_sagemaker_inference_test():
         get_logs=True,
         startup_timeout_seconds=300,
         service_account_name="airflow-sa",
-        secrets=[
-            SECRET_AWS_REGION,
-        ],
+        # AWS_REGION resolved from K8s secret via Kubernetes Secrets Backend
     )
-    def inference_call_op():
-        """
-        Perform inference on a SageMaker endpoint with multiple images.
-        """
+    def inference_call_op() -> None:
+        """Run inference against the SageMaker endpoint for a set of test images."""
         import json
 
         from src.inference_to_sagemaker import (
@@ -58,31 +48,19 @@ def cnn_skin_cancer_sagemaker_inference_test():
         )
 
         sagemaker_endpoint_name = "test-cnn-skin-cancer"
-
-        image_directoy = get_image_directory()
-        print(f"Image directory: {image_directoy}")
+        image_directory = get_image_directory()
         filenames = ["1.jpg", "10.jpg", "1003.jpg", "1005.jpg", "1007.jpg"]
 
-        for file in filenames:
-            filepath = f"{image_directoy}/{file}"
-            print(f"[+] New Inference")
-            print(f"[+] FilePath is {filepath}")
-
-            # Check endpoint status
-            print("[+] Endpoint Status")
-            print(f"Application status is {endpoint_status(sagemaker_endpoint_name)}")
+        for filename in filenames:
+            filepath = f"{image_directory}/{filename}"
+            print(f"[+] Running inference on {filepath}")
+            print(f"[+] Endpoint status: {endpoint_status(sagemaker_endpoint_name)}")
 
             image = read_imagefile(filepath)
-
-            print("[+] Preprocess Data")
             np_image = preprocess_image(image)
-
-            # Add instances fiels so np_image can be inferenced by MLflow model
             payload = json.dumps({"instances": np_image.tolist()})
-
-            print("[+] Prediction")
             predictions = query_endpoint(app_name=sagemaker_endpoint_name, data=payload)
-            print(f"Received response for {file}: {predictions}")
+            print(f"[+] Predictions for {filename}: {predictions}")
 
     inference_call_op()
 

@@ -1,76 +1,40 @@
-import os
+"""
+Kubernetes-based Airflow DAG for the CNN skin cancer classification pipeline.
+
+Secret management: secrets are resolved via the Airflow Kubernetes Secrets Backend
+(AIRFLOW__SECRETS__BACKEND = KubernetesSecretBackend), so explicit `Secret` objects
+are no longer needed — pods pick up environment variables from the pod's service account
+via IRSA and from K8s secrets synced by External Secrets Operator.
+"""
+
 from enum import Enum
 
 import mlflow
 import pendulum
 from airflow.decorators import dag, task
-from airflow.kubernetes.secret import Secret
 from airflow.models import Variable
-from airflow.operators.bash import BashOperator
-from airflow.providers.docker.operators.docker import DockerOperator
 from kubernetes.client import models as k8s
 
-################################################################################
-#
-# SET VARIOUS PARAMETERS
-#
-EXPERIMENT_NAME = "cnn_skin_cancer"  # mlflow experiment name
-skin_cancer_container_image = "seblum/cnn-skin-cancer-model:latest"  # base image for k8s pods
+EXPERIMENT_NAME = "cnn_skin_cancer"
+skin_cancer_container_image = "seblum/cnn-skin-cancer-model:latest"
 
 MLFLOW_TRACKING_URI = Variable.get("MLFLOW_TRACKING_URI")
 ECR_REPOSITORY_NAME = Variable.get("ECR_REPOSITORY_NAME")
 ECR_SAGEMAKER_IMAGE_TAG = Variable.get("ECR_SAGEMAKER_IMAGE_TAG")
 
-# secrets to pass on to k8s pod
-secret_name = "airflow-sagemaker-access"
-SECRET_AWS_ROLE_NAME_SAGEMAKER = Secret(
-    deploy_type="env",
-    deploy_target="AWS_ROLE_NAME_SAGEMAKER",
-    secret=secret_name,
-    key="AWS_ROLE_NAME_SAGEMAKER",
-)
-
-secret_name = "airflow-aws-account-information"
-SECRET_AWS_ID = Secret(deploy_type="env", deploy_target="AWS_ID", secret=secret_name, key="AWS_ID")
-SECRET_AWS_REGION = Secret(deploy_type="env", deploy_target="AWS_REGION", secret=secret_name, key="AWS_REGION")
-
-# secrets to pass on to k8s pod
-secret_name = "airflow-s3-data-bucket-access-credentials"
-SECRET_AWS_BUCKET = Secret(deploy_type="env", deploy_target="AWS_BUCKET", secret=secret_name, key="AWS_BUCKET")
-SECRET_AWS_ACCESS_KEY_ID = Secret(
-    deploy_type="env",
-    deploy_target="AWS_ACCESS_KEY_ID",
-    secret=secret_name,
-    key="AWS_ACCESS_KEY_ID",
-)
-SECRET_AWS_SECRET_ACCESS_KEY = Secret(
-    deploy_type="env",
-    deploy_target="AWS_SECRET_ACCESS_KEY",
-    secret=secret_name,
-    key="AWS_SECRET_ACCESS_KEY",
-)
-SECRET_AWS_ROLE_NAME = Secret(
-    deploy_type="env",
-    deploy_target="AWS_ROLE_NAME",
-    secret=secret_name,
-    key="AWS_ROLE_NAME",
-)
-
-# node_selector and toleration to schedule model training on specific nodes
+# Node selector and tolerations to schedule model training on dedicated nodes
 tolerations = [k8s.V1Toleration(key="dedicated", operator="Equal", value="t3_large", effect="NoSchedule")]
 node_selector = {"role": "t3_large"}
 
 
-# Enum Class to distiguish models
 class Model_Class(Enum):
-    """This enum includes different models."""
+    """Supported model architectures."""
 
     Basic = "Basic"
     CrossVal = "CrossVal"
     ResNet50 = "ResNet50"
 
 
-# Set various model params
 model_params = {
     "num_classes": 2,
     "input_shape": (224, 224, 3),
@@ -84,273 +48,157 @@ model_params = {
     "epochs": 2,
     "batch_size": 64,
     "learning_rate": 1e-5,
-    "pooling": "avg",  # needed for resnet50
+    "pooling": "avg",
     "verbose": 2,
 }
 
-################################################################################
-#
-# SET MLFLOW
-#
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 
 def make_mlflow() -> str:
-    """
-    Creates an MLflow experiment and sets it as the active experiment.
-
-    Returns:
-        str: The experiment ID of the created or existing MLflow experiment.
-
-    Example:
-        # Create an MLflow experiment and set it as active
-        experiment_id = make_mlflow()
-        print(f"Active MLflow experiment ID: {experiment_id}")
-    """
+    """Create or retrieve the MLflow experiment and return its ID."""
     try:
-        mlflow_experiment_id = mlflow.create_experiment(EXPERIMENT_NAME)
-    except:
+        mlflow.create_experiment(EXPERIMENT_NAME)
+    except Exception:
         pass
-    mlflow_experiment_id = mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
-    return mlflow_experiment_id
+    return mlflow.set_experiment(EXPERIMENT_NAME).experiment_id
 
 
-# When dag is loaded, mlflow experiment is created
 mlflow_experiment_id = make_mlflow()
 
+# Shared Kubernetes pod defaults for all tasks
+_k8s_defaults = {
+    "image": skin_cancer_container_image,
+    "namespace": "airflow",
+    "in_cluster": True,
+    "get_logs": True,
+    "do_xcom_push": True,
+    "startup_timeout_seconds": 300,
+    "service_account_name": "airflow-sa",
+    # No explicit Secret() objects — credentials come from IRSA + K8s secrets
+    # synced by External Secrets Operator and resolved by the Kubernetes Secrets Backend.
+}
 
-################################################################################
-#
-# AIRFLOW DAG
-#
+
 @dag(
     dag_id="cnn_skin_cancer_workflow",
     default_args={
         "owner": "seblum",
         "depends_on_past": False,
         "start_date": pendulum.datetime(2021, 1, 1, tz="Europe/Amsterdam"),
-        "tags": ["Keras CNN to classify skin cancer"],
     },
-    schedule_interval=None,
+    tags=["Keras CNN to classify skin cancer"],
+    schedule=None,
     max_active_runs=1,
 )
 def cnn_skin_cancer_workflow():
-    """
-    Apache Airflow DAG for running a workflow to train, compare, and deploy skin cancer classification models.
-    """
+    """Airflow DAG: train, compare, and deploy skin cancer classification models on Kubernetes."""
 
     @task.kubernetes(
-        image=skin_cancer_container_image,
         task_id="preprocessing_op",
-        namespace="airflow",
         env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
-        in_cluster=True,
-        get_logs=True,
-        do_xcom_push=True,
-        startup_timeout_seconds=300,
-        service_account_name="airflow-sa",
-        secrets=[
-            SECRET_AWS_BUCKET,
-            SECRET_AWS_REGION,
-            SECRET_AWS_ACCESS_KEY_ID,
-            SECRET_AWS_SECRET_ACCESS_KEY,
-            SECRET_AWS_ROLE_NAME,
-        ],
+        **_k8s_defaults,
     )
     def preprocessing_op(mlflow_experiment_id: str) -> dict:
-        """
-        Perform data preprocessing.
-
-        Args:
-            mlflow_experiment_id (str): The MLflow experiment ID.
-
-        Returns:
-            dict: A dictionary containing the paths to preprocessed data.
-        """
+        """Preprocess raw images and upload NumPy arrays to S3."""
         import os
-
-        aws_bucket = os.getenv("AWS_BUCKET")
 
         from src.preprocessing import data_preprocessing
 
-        (
-            X_train_data_path,
-            y_train_data_path,
-            X_test_data_path,
-            y_test_data_path,
-        ) = data_preprocessing(mlflow_experiment_id=mlflow_experiment_id, aws_bucket=aws_bucket)
-
-        # Create dictionary with S3 paths to return
-        return_dict = {
-            "X_train_data_path": X_train_data_path,
-            "y_train_data_path": y_train_data_path,
-            "X_test_data_path": X_test_data_path,
-            "y_test_data_path": y_test_data_path,
+        X_train, y_train, X_test, y_test = data_preprocessing(
+            mlflow_experiment_id=mlflow_experiment_id,
+            aws_bucket=os.environ["AWS_BUCKET"],
+        )
+        return {
+            "X_train_data_path": X_train,
+            "y_train_data_path": y_train,
+            "X_test_data_path": X_test,
+            "y_test_data_path": y_test,
         }
-        return return_dict
 
     @task.kubernetes(
-        image=skin_cancer_container_image,
         task_id="model_training_op",
-        namespace="airflow",
         env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
-        in_cluster=True,
-        get_logs=True,
-        do_xcom_push=True,
-        startup_timeout_seconds=300,
         node_selector=node_selector,
         tolerations=tolerations,
-        service_account_name="airflow-sa",
-        secrets=[
-            SECRET_AWS_BUCKET,
-            SECRET_AWS_REGION,
-            SECRET_AWS_ACCESS_KEY_ID,
-            SECRET_AWS_SECRET_ACCESS_KEY,
-            SECRET_AWS_ROLE_NAME,
-        ],
+        **_k8s_defaults,
     )
-    def model_training_op(mlflow_experiment_id: str, model_class: str, model_params: dict, input: dict) -> dict:
-        """
-        Train a model.
-
-        Args:
-            mlflow_experiment_id (str): The MLflow experiment ID.
-            model_class (str): The class of the model to train.
-            model_params (dict): A dictionary containing the model parameters.
-            input (dict): A dictionary containing the input data.
-
-        Returns:
-            dict: A dictionary containing the results of the model training.
-        """
+    def model_training_op(
+        mlflow_experiment_id: str,
+        model_class: str,
+        model_params: dict,
+        input: dict,
+    ) -> dict:
+        """Train a model architecture and log it to MLflow."""
         import os
 
         from src.train import train_model
 
-        aws_bucket = os.getenv("AWS_BUCKET")
         run_id, model_name, model_version, model_stage = train_model(
             mlflow_experiment_id=mlflow_experiment_id,
             model_class=model_class,
             model_params=model_params,
-            aws_bucket=aws_bucket,
+            aws_bucket=os.environ["AWS_BUCKET"],
             import_dict=input,
         )
-
-        return_dict = {
+        return {
             "run_id": run_id,
             "model_name": model_name,
             "model_version": model_version,
             "model_stage": model_stage,
         }
-        return return_dict
 
     @task.kubernetes(
-        image=skin_cancer_container_image,
         task_id="compare_models_op",
-        namespace="airflow",
         env_vars={"MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI},
-        in_cluster=True,
-        get_logs=True,
-        do_xcom_push=True,
-        startup_timeout_seconds=300,
-        service_account_name="airflow-sa",  # Don't need Access Secrets as SA is given
+        **_k8s_defaults,
     )
-    def compare_models_op(train_data_basic: dict, train_data_resnet50: dict, train_data_crossval: dict) -> dict:
-        """
-        Compare trained models.
+    def compare_models_op(
+        train_data_basic: dict,
+        train_data_resnet50: dict,
+        train_data_crossval: dict,
+    ) -> dict:
+        """Select the best model by accuracy and promote it to Staging."""
+        from src.compare_models import compare_models
 
-        Args:
-            train_data_basic (dict): A dictionary containing the results of training the basic model.
-            train_data_resnet50 (dict): A dictionary containing the results of training the ResNet50 model.
-            train_data_crossval (dict): A dictionary containing the results of training the CrossVal model.
-
-        Returns:
-            dict: A dictionary containing the results of the model comparison.
-        """
         compare_dict = {
             train_data_basic["model_name"]: train_data_basic["run_id"],
             train_data_resnet50["model_name"]: train_data_resnet50["run_id"],
             train_data_crossval["model_name"]: train_data_crossval["run_id"],
         }
-
-        print(compare_dict)
-        from src.compare_models import compare_models
-
-        serving_model_name, serving_model_uri, serving_model_version = compare_models(input_dict=compare_dict)
-        return_dict = {
-            "serving_model_name": serving_model_name,
-            "serving_model_uri": serving_model_uri,
-            "serving_model_version": serving_model_version,
+        serving_name, serving_uri, serving_version = compare_models(input_dict=compare_dict)
+        return {
+            "serving_model_name": serving_name,
+            "serving_model_uri": serving_uri,
+            "serving_model_version": serving_version,
         }
-        return return_dict
 
     @task.kubernetes(
-        image=skin_cancer_container_image,
         task_id="deploy_model_to_sagemaker_op",
-        namespace="airflow",
         env_vars={
             "MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI,
             "ECR_REPOSITORY_NAME": ECR_REPOSITORY_NAME,
             "ECR_SAGEMAKER_IMAGE_TAG": ECR_SAGEMAKER_IMAGE_TAG,
         },
-        in_cluster=True,
-        get_logs=True,
-        startup_timeout_seconds=300,
-        service_account_name="airflow-sa",
-        secrets=[
-            SECRET_AWS_ROLE_NAME_SAGEMAKER,
-            SECRET_AWS_REGION,
-            SECRET_AWS_ID,
-        ],
+        **{k: v for k, v in _k8s_defaults.items() if k != "do_xcom_push"},
     )
-    def deploy_model_to_sagemaker_op(serving_model_dict: dict):
-        """
-        Deploys a machine learning model to Amazon SageMaker using the specified parameters.
-
-        Args:
-            serving_model_dict (dict): A dictionary containing information about the model to deploy.
-                It should contain the following keys:
-                    - "serving_model_name" (str): The name of the MLflow model to be deployed.
-                    - "serving_model_uri" (str): The URI or path to the MLflow model in artifact storage.
-                    - "serving_model_version" (str): The version of the MLflow model to deploy.
-
-        Example:
-            serving_model_info = {
-                "serving_model_name": "my_mlflow_model",
-                "serving_model_uri": "s3://my-bucket/mlflow/models/my_model",
-                "serving_model_version": "1",
-            }
-            deploy_model_to_sagemaker_op(serving_model_info)
-        """
-        mlflow_model_name, mlflow_model_uri, mlflow_model_version = (
-            serving_model_dict["serving_model_name"],
-            serving_model_dict["serving_model_uri"],
-            serving_model_dict["serving_model_version"],
-        )
-
-        print(f"mlflow_model_name: {mlflow_model_name}")
-        print(f"mlflow_model_uri: {mlflow_model_uri}")
-        print(f"mlflow_model_version: {mlflow_model_version}")
-
+    def deploy_model_to_sagemaker_op(serving_model_dict: dict) -> None:
+        """Deploy the winning model to an Amazon SageMaker endpoint."""
         from src.deploy_model_to_sagemaker import deploy_model_to_sagemaker
 
         result = deploy_model_to_sagemaker(
-            mlflow_model_name=mlflow_model_name,
-            mlflow_model_uri=mlflow_model_uri,
-            mlflow_model_version=mlflow_model_version,
-            mlflow_experiment_name="cnn_skin_cancer",
+            mlflow_model_name=serving_model_dict["serving_model_name"],
+            mlflow_model_uri=serving_model_dict["serving_model_uri"],
+            mlflow_model_version=serving_model_dict["serving_model_version"],
+            mlflow_experiment_name=EXPERIMENT_NAME,
             sagemaker_endpoint_name="test-cnn-skin-cancer",
             sagemaker_instance_type="ml.t2.large",
         )
+        print(f"Deploy result: {result}")
 
-        print(f"Script run successfully: {result}")
+    # ── Pipeline wiring ───────────────────────────────────────────────────────
+    preprocessed_data = preprocessing_op(mlflow_experiment_id=mlflow_experiment_id)
 
-    ################################################################################
-    #
-    # CREATE PIPELINE
-    #
-    preprocessed_data = preprocessing_op(
-        mlflow_experiment_id=mlflow_experiment_id,
-    )
     train_data_basic = model_training_op(
         mlflow_experiment_id=mlflow_experiment_id,
         model_class=Model_Class.Basic.name,
@@ -369,9 +217,9 @@ def cnn_skin_cancer_workflow():
         model_params=model_params,
         input=preprocessed_data,
     )
-    compare_models_dict = compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval)
 
-    deploy_model_to_sagemaker_op(compare_models_dict)
+    compare_result = compare_models_op(train_data_basic, train_data_resnet50, train_data_crossval)
+    deploy_model_to_sagemaker_op(compare_result)
 
 
 cnn_skin_cancer_workflow()
